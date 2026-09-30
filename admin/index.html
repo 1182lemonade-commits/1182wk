@@ -1105,9 +1105,19 @@
             <h2>WK 응답</h2>
 
             <div
-              id="applicationCount"
-              class="muted"
-            ></div>
+              class="row"
+              style="margin-top: 8px; align-items: center;"
+            >
+              <select
+                id="applicationCycleSelect"
+                aria-label="WK 회차 선택"
+              ></select>
+
+              <div
+                id="applicationCount"
+                class="muted"
+              ></div>
+            </div>
           </div>
 
           <button
@@ -1330,6 +1340,7 @@
 
   let adminData = {
     selectedServer:null,
+    currentCycleNumber:null,
     settings:null,
     tiers:[],
     alliances:[],
@@ -1338,6 +1349,8 @@
     emailRecipients:[],
     emailDeliveryLogs:[]
   };
+
+  let selectedApplicationCycleNumber = null;
 
 
   // =========================================================
@@ -2439,6 +2452,7 @@
     "change",
     async event => {
       selectedServerCode = event.target.value;
+      selectedApplicationCycleNumber = null;
 
       if (selectedServerCode) {
         sessionStorage.setItem(
@@ -3914,13 +3928,97 @@
     return APPLICATION_LABELS[group]?.[value] || value || "";
   }
 
+  function applicationCycleNumbers() {
+    return Array.from(
+      new Set(
+        (adminData.applications || [])
+          .map(item => Number(item.cycle_number))
+          .filter(value => Number.isInteger(value) && value >= 1)
+      )
+    ).sort((a, b) => b - a);
+  }
+
+  function resolveSelectedApplicationCycle() {
+    const cycles = applicationCycleNumbers();
+    const current = Number(adminData.currentCycleNumber);
+
+    if (
+      Number.isInteger(selectedApplicationCycleNumber) &&
+      cycles.includes(selectedApplicationCycleNumber)
+    ) {
+      return selectedApplicationCycleNumber;
+    }
+
+    if (
+      Number.isInteger(current) &&
+      cycles.includes(current)
+    ) {
+      selectedApplicationCycleNumber = current;
+      return current;
+    }
+
+    selectedApplicationCycleNumber =
+      cycles.length ? cycles[0] : null;
+
+    return selectedApplicationCycleNumber;
+  }
+
+  function selectedCycleApplications() {
+    const cycleNumber = resolveSelectedApplicationCycle();
+
+    if (!Number.isInteger(cycleNumber)) {
+      return [];
+    }
+
+    return (adminData.applications || []).filter(
+      item => Number(item.cycle_number) === cycleNumber
+    );
+  }
+
+  function renderApplicationCycleSelect() {
+    const select = document.getElementById("applicationCycleSelect");
+    if (!select) return;
+
+    const cycles = applicationCycleNumbers();
+    const selected = resolveSelectedApplicationCycle();
+    const current = Number(adminData.currentCycleNumber);
+
+    select.innerHTML = "";
+
+    if (!cycles.length) {
+      const option = document.createElement("option");
+      option.value = "";
+      option.textContent =
+        Number.isInteger(current)
+          ? `${current}회차 (현재) · 신청 없음`
+          : "회차 없음";
+      select.appendChild(option);
+      select.disabled = true;
+      return;
+    }
+
+    for (const cycleNumber of cycles) {
+      const option = document.createElement("option");
+      option.value = String(cycleNumber);
+      option.textContent =
+        cycleNumber === current
+          ? `${cycleNumber}회차 (현재)`
+          : `${cycleNumber}회차`;
+      option.selected = cycleNumber === selected;
+      select.appendChild(option);
+    }
+
+    select.disabled = false;
+  }
+
   function downloadApplicationsExcel() {
     if (!requireSelectedServer("applicationsStatus")) return;
 
-    const applications = adminData.applications || [];
+    const cycleNumber = resolveSelectedApplicationCycle();
+    const applications = selectedCycleApplications();
 
-    if (!applications.length) {
-      setStatus("applicationsStatus", "다운로드할 응답이 없습니다.", "error");
+    if (!Number.isInteger(cycleNumber) || !applications.length) {
+      setStatus("applicationsStatus", "선택한 회차에 다운로드할 응답이 없습니다.", "error");
       return;
     }
 
@@ -3930,6 +4028,7 @@
     }
 
     const rows = applications.map(item => ({
+      "Cycle": item.cycle_number ?? "",
       "Player Name": item.player_name ?? "",
       "Tier": item.tiers?.name ?? "",
       "Alliance": item.alliances?.name ?? "",
@@ -3944,19 +4043,42 @@
 
     const worksheet = XLSX.utils.json_to_sheet(rows);
     worksheet["!cols"] = [
-      { wch: 22 }, { wch: 10 }, { wch: 12 }, { wch: 16 }, { wch: 14 },
-      { wch: 14 }, { wch: 34 }, { wch: 28 }, { wch: 24 }, { wch: 22 }
+      { wch: 10 }, { wch: 22 }, { wch: 10 }, { wch: 12 }, { wch: 16 },
+      { wch: 14 }, { wch: 14 }, { wch: 34 }, { wch: 28 }, { wch: 24 },
+      { wch: 22 }
     ];
 
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "WK Applications");
 
     const stamp = new Date().toISOString().slice(0, 10);
-    XLSX.writeFile(workbook, `S${selectedServerCode}-WK-${stamp}.xlsx`);
-    setStatus("applicationsStatus", "Excel 파일을 다운로드했습니다.", "success");
+    XLSX.writeFile(
+      workbook,
+      `S${selectedServerCode}-WK-Cycle-${cycleNumber}-${stamp}.xlsx`
+    );
+    setStatus(
+      "applicationsStatus",
+      `${cycleNumber}회차 Excel 파일을 다운로드했습니다.`,
+      "success"
+    );
   }
 
   document.getElementById("downloadExcelButton")?.addEventListener("click", downloadApplicationsExcel);
+
+  document.getElementById("applicationCycleSelect")?.addEventListener(
+    "change",
+    event => {
+      const value = Number(event.target.value);
+
+      selectedApplicationCycleNumber =
+        Number.isInteger(value) && value >= 1
+          ? value
+          : null;
+
+      renderApplications();
+      setStatus("applicationsStatus");
+    }
+  );
 
 
   // =========================================================
@@ -3965,16 +4087,21 @@
 
   function renderApplications() {
 
+    renderApplicationCycleSelect();
+
+    const cycleNumber =
+      resolveSelectedApplicationCycle();
+
     const applications =
-      adminData.applications || [];
+      selectedCycleApplications();
 
 
     document.getElementById(
       "applicationCount"
     ).textContent =
-      "총 " +
-      applications.length +
-      "건";
+      Number.isInteger(cycleNumber)
+        ? `${cycleNumber}회차 · 총 ${applications.length}건`
+        : "총 0건";
 
 
     const container =
@@ -3988,7 +4115,9 @@
     ) {
 
       container.innerHTML =
-        '<div class="empty">아직 제출된 신청서가 없습니다.</div>';
+        Number.isInteger(cycleNumber)
+          ? `<div class="empty">${escapeHtml(cycleNumber)}회차에 제출된 신청서가 없습니다.</div>`
+          : '<div class="empty">아직 제출된 신청서가 없습니다.</div>';
 
       return;
 
