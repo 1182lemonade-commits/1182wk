@@ -587,6 +587,33 @@
 
 <script>
   // =========================================================
+  // GITHUB PAGES ROUTE RESTORE
+  // 404.html stores the requested path, then redirects to /.
+  // Restore that path without reloading so /1182, /967, etc.
+  // can use the shared public application page.
+  // =========================================================
+
+  const savedRoute =
+    sessionStorage.getItem("wkapplication-route");
+
+  if (savedRoute) {
+    sessionStorage.removeItem("wkapplication-route");
+
+    const currentRoute =
+      window.location.pathname +
+      window.location.search +
+      window.location.hash;
+
+    if (savedRoute !== currentRoute) {
+      history.replaceState(
+        null,
+        "",
+        savedRoute
+      );
+    }
+  }
+
+  // =========================================================
   // CONFIG
   // =========================================================
 
