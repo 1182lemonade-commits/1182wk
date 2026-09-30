@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <title>S1182 WK Admin</title>
+  <title>WK Admin</title>
 
   <style>
     :root {
@@ -213,6 +213,33 @@
     .theme-select {
       width:auto;
       min-width:105px;
+    }
+
+    .server-bar {
+      display:grid;
+      grid-template-columns:minmax(180px,320px) 1fr;
+      gap:12px;
+      align-items:end;
+      margin-bottom:18px;
+    }
+
+    .server-bar .field {
+      margin:0;
+    }
+
+    .selected-server-note {
+      min-height:42px;
+      display:flex;
+      align-items:center;
+      color:var(--muted);
+    }
+
+    .schedule-grid {
+      display:grid;
+      grid-template-columns:minmax(220px,2fr) minmax(120px,1fr) minmax(120px,1fr) auto;
+      gap:10px;
+      align-items:end;
+      margin-top:18px;
     }
 
     .tabs {
@@ -486,7 +513,9 @@
 
       .translation-grid,
       .form-grid,
-      .simple-item {
+      .simple-item,
+      .server-bar,
+      .schedule-grid {
         grid-template-columns:1fr;
       }
 
@@ -519,7 +548,7 @@
   <section id="loginView" class="login-wrap">
     <div class="panel">
 
-      <h1>S1182 WK Admin</h1>
+      <h1>WK Admin</h1>
 
       <p class="muted">
         관리자 비밀번호를 입력하세요.
@@ -564,7 +593,7 @@
 
       <div>
         <h1 style="margin-bottom:3px;">
-          S1182 WK Admin
+          WK Admin
         </h1>
 
         <div class="muted">
@@ -609,6 +638,20 @@
       </div>
 
     </header>
+
+
+    <div class="panel server-bar">
+      <div class="field">
+        <label for="serverSelect">관리 서버</label>
+        <select id="serverSelect">
+          <option value="">서버를 선택하세요</option>
+        </select>
+      </div>
+
+      <div id="selectedServerNote" class="selected-server-note">
+        서버를 선택하면 해당 서버의 관리 데이터가 표시됩니다.
+      </div>
+    </div>
 
 
     <nav class="tabs">
@@ -700,6 +743,27 @@
           class="muted"
           style="margin-top:12px;"
         ></div>
+
+        <div class="schedule-grid">
+          <div class="field">
+            <label for="firstOpenAt">자동 일정 최초 시작 시각</label>
+            <input id="firstOpenAt" type="datetime-local">
+          </div>
+
+          <div class="field">
+            <label for="cycleDays">주기(일)</label>
+            <input id="cycleDays" type="number" min="1" max="365">
+          </div>
+
+          <div class="field">
+            <label for="openDays">접수 기간(일)</label>
+            <input id="openDays" type="number" min="1" max="365">
+          </div>
+
+          <button id="saveScheduleButton" class="btn btn-primary" type="button">
+            자동 일정 저장
+          </button>
+        </div>
 
       </div>
 
@@ -1066,14 +1130,19 @@
     FUNCTION_BASE + "/wk-admin";
 
   const TOKEN_KEY =
-    "s1182-admin-session";
+    "wkapplication-admin-session";
 
 
   // =========================================================
   // STATE
   // =========================================================
 
+  let servers = [];
+  let selectedServerCode =
+    sessionStorage.getItem("wkapplication-admin-server") || "";
+
   let adminData = {
+    selectedServer:null,
     settings:null,
     tiers:[],
     alliances:[],
@@ -1108,7 +1177,7 @@
 
   const savedTheme =
     localStorage.getItem(
-      "s1182-admin-theme"
+      "wkapplication-admin-theme"
     ) || "system";
 
   themeSelect.value =
@@ -1128,7 +1197,7 @@
         theme;
 
       localStorage.setItem(
-        "s1182-admin-theme",
+        "wkapplication-admin-theme",
         theme
       );
 
@@ -1272,6 +1341,94 @@
 
 
     return response;
+  }
+
+
+  function activeServers() {
+    return servers.filter(item => item && item.is_active !== false);
+  }
+
+
+  function requireSelectedServer(statusId = "") {
+    if (selectedServerCode) return true;
+
+    if (statusId) {
+      setStatus(statusId, "먼저 관리할 서버를 선택하세요.", "error");
+    } else {
+      alert("먼저 관리할 서버를 선택하세요.");
+    }
+
+    return false;
+  }
+
+
+  function selectedAdminUrl() {
+    return ADMIN_URL +
+      "?server_code=" +
+      encodeURIComponent(selectedServerCode);
+  }
+
+
+  function toDateTimeLocal(value) {
+    if (!value) return "";
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+
+    const pad = number => String(number).padStart(2, "0");
+
+    return [
+      date.getFullYear(),
+      "-",
+      pad(date.getMonth() + 1),
+      "-",
+      pad(date.getDate()),
+      "T",
+      pad(date.getHours()),
+      ":",
+      pad(date.getMinutes())
+    ].join("");
+  }
+
+
+  function renderServerSelector() {
+    const select = document.getElementById("serverSelect");
+    const note = document.getElementById("selectedServerNote");
+    const list = activeServers();
+
+    select.innerHTML = '<option value="">서버를 선택하세요</option>';
+
+    for (const item of list) {
+      const option = document.createElement("option");
+      option.value = String(item.code);
+      option.textContent = "S" + item.code + (item.name ? " · " + item.name : "");
+      select.appendChild(option);
+    }
+
+    if (!list.some(item => String(item.code) === selectedServerCode)) {
+      selectedServerCode = "";
+      sessionStorage.removeItem("wkapplication-admin-server");
+    }
+
+    select.value = selectedServerCode;
+
+    note.textContent = selectedServerCode
+      ? "현재 S" + selectedServerCode + " 서버를 관리하고 있습니다."
+      : "서버를 선택하면 해당 서버의 관리 데이터가 표시됩니다.";
+  }
+
+
+  function clearSelectedServerData() {
+    adminData = {
+      selectedServer:null,
+      settings:null,
+      tiers:[],
+      alliances:[],
+      agreements:[],
+      applications:[]
+    };
+
+    renderAll();
   }
 
 
@@ -1532,6 +1689,8 @@
 
 
       clearToken();
+      selectedServerCode = "";
+      sessionStorage.removeItem("wkapplication-admin-server");
 
       showLogin();
 
@@ -1544,58 +1703,51 @@
   // =========================================================
 
   async function loadAdminData() {
-
     try {
+      const serverResponse =
+        await adminFetch(
+          ADMIN_URL,
+          { method:"GET" }
+        );
+
+      const serverResult =
+        await parseResponse(serverResponse);
+
+      servers =
+        Array.isArray(serverResult.servers)
+          ? serverResult.servers
+          : [];
+
+      renderServerSelector();
+
+      if (!selectedServerCode) {
+        clearSelectedServerData();
+        return;
+      }
 
       const response =
         await adminFetch(
-          ADMIN_URL,
-          {
-            method:"GET"
-          }
+          selectedAdminUrl(),
+          { method:"GET" }
         );
-
 
       adminData =
-        await parseResponse(
-          response
-        );
+        await parseResponse(response);
 
-
-      adminData.tiers =
-        adminData.tiers || [];
-
-      adminData.alliances =
-        adminData.alliances || [];
-
-      adminData.agreements =
-        adminData.agreements || [];
-
-      adminData.applications =
-        adminData.applications || [];
-
+      adminData.tiers = adminData.tiers || [];
+      adminData.alliances = adminData.alliances || [];
+      adminData.agreements = adminData.agreements || [];
+      adminData.applications = adminData.applications || [];
 
       renderAll();
 
-
     } catch (error) {
-
       console.error(error);
 
-
-      if (
-        error.message !==
-        "UNAUTHORIZED"
-      ) {
-
-        alert(
-          "관리자 데이터를 불러오지 못했습니다."
-        );
-
+      if (error.message !== "UNAUTHORIZED") {
+        alert("관리자 데이터를 불러오지 못했습니다.");
       }
-
     }
-
   }
 
 
@@ -1607,121 +1759,70 @@
     body,
     statusId
   ) {
-
-    if (statusId) {
-
-      setStatus(
-        statusId
-      );
-
+    if (!requireSelectedServer(statusId)) {
+      throw new Error("SERVER_REQUIRED");
     }
 
+    if (statusId) setStatus(statusId);
 
     try {
-
       const response =
         await adminFetch(
           ADMIN_URL,
           {
             method:"POST",
-
             headers:{
-              "Content-Type":
-                "application/json"
+              "Content-Type":"application/json"
             },
-
-            body:
-              JSON.stringify(
-                body
-              )
+            body:JSON.stringify({
+              ...body,
+              server_code:selectedServerCode
+            })
           }
         );
 
-
       const result =
-        await parseResponse(
-          response
-        );
-
+        await parseResponse(response);
 
       await loadAdminData();
 
-
       if (statusId) {
-
         setStatus(
           statusId,
           "저장되었습니다.",
           "success"
         );
-
       }
-
 
       return result;
 
-
     } catch (error) {
-
       console.error(error);
 
-
       if (
-        error.message !==
-        "UNAUTHORIZED" &&
+        error.message !== "UNAUTHORIZED" &&
+        error.message !== "SERVER_REQUIRED" &&
         statusId
       ) {
+        let message = "처리에 실패했습니다.";
 
-        let message =
-          "처리에 실패했습니다.";
-
-
-        if (
-          error.message ===
-          "AGREEMENT_LIMIT"
-        ) {
-
-          message =
-            "활성화된 동의 항목은 최대 3개입니다.";
-
+        if (error.message === "AGREEMENT_LIMIT") {
+          message = "활성화된 동의 항목은 최대 3개입니다.";
         }
 
-
-        if (
-          error.message ===
-          "ALL_TRANSLATIONS_REQUIRED"
-        ) {
-
-          message =
-            "한국어, 영어, 일본어, 러시아어 문구를 모두 입력하세요.";
-
+        if (error.message === "ALL_TRANSLATIONS_REQUIRED") {
+          message = "한국어, 영어, 일본어, 러시아어 문구를 모두 입력하세요.";
         }
 
-
-        if (
-          error.message ===
-          "NAME_REQUIRED"
-        ) {
-
-          message =
-            "이름을 입력하세요.";
-
+        if (error.message === "NAME_REQUIRED") {
+          message = "이름을 입력하세요.";
         }
 
-
-        setStatus(
-          statusId,
-          message,
-          "error"
-        );
-
+        setStatus(statusId, message, "error");
       }
 
-
       throw error;
-
     }
-
   }
 
 
@@ -1780,6 +1881,29 @@
 
 
   document.getElementById(
+    "serverSelect"
+  ).addEventListener(
+    "change",
+    async event => {
+      selectedServerCode = event.target.value;
+
+      if (selectedServerCode) {
+        sessionStorage.setItem(
+          "wkapplication-admin-server",
+          selectedServerCode
+        );
+      } else {
+        sessionStorage.removeItem(
+          "wkapplication-admin-server"
+        );
+      }
+
+      await loadAdminData();
+    }
+  );
+
+
+  document.getElementById(
     "refreshButton"
   ).addEventListener(
     "click",
@@ -1794,95 +1918,87 @@
   // =========================================================
 
   function renderSettings() {
+    const settings = adminData.settings;
+    const badge = document.getElementById("surveyBadge");
+    const text = document.getElementById("surveyStateText");
+    const buttons = document.querySelectorAll("[data-application-mode]");
+    const firstOpenAt = document.getElementById("firstOpenAt");
+    const cycleDays = document.getElementById("cycleDays");
+    const openDays = document.getElementById("openDays");
+    const saveScheduleButton = document.getElementById("saveScheduleButton");
 
-    const settings =
-      adminData.settings;
-
-    const badge =
-      document.getElementById(
-        "surveyBadge"
-      );
-
-    const text =
-      document.getElementById(
-        "surveyStateText"
-      );
-
-    const buttons =
-      document.querySelectorAll(
-        "[data-application-mode]"
-      );
+    if (!selectedServerCode) {
+      badge.textContent = "서버 미선택";
+      badge.className = "survey-badge closed";
+      text.textContent = "먼저 관리할 서버를 선택하세요.";
+      buttons.forEach(button => {
+        button.disabled = true;
+        button.classList.remove("active");
+      });
+      firstOpenAt.value = "";
+      cycleDays.value = "";
+      openDays.value = "";
+      firstOpenAt.disabled = true;
+      cycleDays.disabled = true;
+      openDays.disabled = true;
+      saveScheduleButton.disabled = true;
+      return;
+    }
 
     if (!settings) {
-      badge.textContent =
-        "설정 없음";
-
-      badge.className =
-        "survey-badge closed";
-
-      text.textContent =
-        "설문 설정을 찾을 수 없습니다.";
-
-      buttons.forEach(
-        button => {
-          button.disabled = true;
-          button.classList.remove(
-            "active"
-          );
-        }
-      );
-
+      badge.textContent = "설정 없음";
+      badge.className = "survey-badge closed";
+      text.textContent = "이 서버의 설문 설정을 찾을 수 없습니다.";
+      buttons.forEach(button => {
+        button.disabled = true;
+        button.classList.remove("active");
+      });
+      firstOpenAt.value = "";
+      cycleDays.value = "";
+      openDays.value = "";
+      firstOpenAt.disabled = true;
+      cycleDays.disabled = true;
+      openDays.disabled = true;
+      saveScheduleButton.disabled = true;
       return;
     }
 
     const mode =
-      ["auto", "open", "closed"]
-        .includes(settings.mode)
+      ["auto", "open", "closed"].includes(settings.mode)
         ? settings.mode
         : "auto";
 
-    buttons.forEach(
-      button => {
-        button.disabled = false;
-        button.classList.toggle(
-          "active",
-          button.dataset.applicationMode ===
-            mode
-        );
-      }
-    );
+    buttons.forEach(button => {
+      button.disabled = false;
+      button.classList.toggle(
+        "active",
+        button.dataset.applicationMode === mode
+      );
+    });
+
+    firstOpenAt.disabled = false;
+    cycleDays.disabled = false;
+    openDays.disabled = false;
+    saveScheduleButton.disabled = false;
+
+    firstOpenAt.value = toDateTimeLocal(settings.first_open_at);
+    cycleDays.value = Number(settings.cycle_days) || "";
+    openDays.value = Number(settings.open_days) || "";
 
     if (mode === "open") {
-      badge.textContent =
-        "FORCE OPEN";
-
-      badge.className =
-        "survey-badge open";
-
-      text.textContent =
-        "일정과 관계없이 강제로 접수를 엽니다.";
-
+      badge.textContent = "FORCE OPEN";
+      badge.className = "survey-badge open";
+      text.textContent = "일정과 관계없이 강제로 접수를 엽니다.";
     } else if (mode === "closed") {
-      badge.textContent =
-        "FORCE CLOSED";
-
-      badge.className =
-        "survey-badge closed";
-
-      text.textContent =
-        "일정과 관계없이 강제로 접수를 마감합니다.";
-
+      badge.textContent = "FORCE CLOSED";
+      badge.className = "survey-badge closed";
+      text.textContent = "일정과 관계없이 강제로 접수를 마감합니다.";
     } else {
-      badge.textContent =
-        "AUTO";
-
-      badge.className =
-        "survey-badge";
-
+      badge.textContent = "AUTO";
+      badge.className = "survey-badge";
       text.textContent =
-        "자동 일정에 따라 접수를 열고 닫습니다. 실제 자동 일정 판정은 다음 단계에서 복구합니다.";
+        "이 서버에 저장된 최초 시작 시각 · 주기 · 접수 기간에 따라 자동으로 접수를 열고 닫습니다.";
     }
-
   }
 
 
@@ -1891,56 +2007,88 @@
   ).addEventListener(
     "click",
     async event => {
-
       const button =
-        event.target.closest(
-          "[data-application-mode]"
-        );
+        event.target.closest("[data-application-mode]");
 
-      if (!button) {
-        return;
-      }
+      if (!button || !requireSelectedServer("settingsStatus")) return;
 
-      const mode =
-        button.dataset.applicationMode;
-
-      if (
-        !["auto", "open", "closed"]
-          .includes(mode)
-      ) {
-        return;
-      }
+      const mode = button.dataset.applicationMode;
+      if (!["auto", "open", "closed"].includes(mode)) return;
 
       const buttons =
-        document.querySelectorAll(
-          "[data-application-mode]"
-        );
+        document.querySelectorAll("[data-application-mode]");
 
-      buttons.forEach(
-        item => {
-          item.disabled = true;
-        }
-      );
+      buttons.forEach(item => {
+        item.disabled = true;
+      });
 
       try {
         await action(
           {
-            action:
-              "update_settings",
+            action:"update_settings",
             mode
           },
           "settingsStatus"
         );
       } catch (_) {
-        // action() handles the visible error.
       } finally {
-        buttons.forEach(
-          item => {
-            item.disabled = false;
-          }
-        );
+        buttons.forEach(item => {
+          item.disabled = false;
+        });
+      }
+    }
+  );
+
+
+  document.getElementById(
+    "saveScheduleButton"
+  ).addEventListener(
+    "click",
+    async () => {
+      if (!requireSelectedServer("settingsStatus")) return;
+      if (!adminData.settings) {
+        setStatus("settingsStatus", "이 서버의 설문 설정이 없습니다.", "error");
+        return;
       }
 
+      const firstOpenValue =
+        document.getElementById("firstOpenAt").value;
+
+      const cycleDays =
+        Number(document.getElementById("cycleDays").value);
+
+      const openDays =
+        Number(document.getElementById("openDays").value);
+
+      if (
+        !firstOpenValue ||
+        !Number.isInteger(cycleDays) ||
+        !Number.isInteger(openDays) ||
+        cycleDays < 1 ||
+        cycleDays > 365 ||
+        openDays < 1 ||
+        openDays > cycleDays
+      ) {
+        setStatus(
+          "settingsStatus",
+          "자동 일정 값을 확인하세요. 접수 기간은 주기보다 길 수 없습니다.",
+          "error"
+        );
+        return;
+      }
+
+      try {
+        await action(
+          {
+            action:"update_settings",
+            mode:adminData.settings.mode || "auto",
+            first_open_at:new Date(firstOpenValue).toISOString(),
+            cycle_days:cycleDays,
+            open_days:openDays
+          },
+          "settingsStatus"
+        );
+      } catch (_) {}
     }
   );
 
@@ -2871,6 +3019,8 @@
   }
 
   function downloadApplicationsExcel() {
+    if (!requireSelectedServer("applicationsStatus")) return;
+
     const applications = adminData.applications || [];
 
     if (!applications.length) {
@@ -2906,7 +3056,7 @@
     XLSX.utils.book_append_sheet(workbook, worksheet, "WK Applications");
 
     const stamp = new Date().toISOString().slice(0, 10);
-    XLSX.writeFile(workbook, `S1182-WK-${stamp}.xlsx`);
+    XLSX.writeFile(workbook, `S${selectedServerCode}-WK-${stamp}.xlsx`);
     setStatus("applicationsStatus", "Excel 파일을 다운로드했습니다.", "success");
   }
 
@@ -3129,17 +3279,12 @@
   // =========================================================
 
   function renderAll() {
-
+    renderServerSelector();
     renderSettings();
-
     renderAgreements();
-
     renderTiers();
-
     renderAlliances();
-
     renderApplications();
-
   }
 
 
