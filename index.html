@@ -657,10 +657,10 @@
       title: "어느 서버에서 오셨나요?",
       description: "서버 번호를 입력해주세요.",
       submit: "확인",
-      numeric: landingText().numeric,
-      checking: landingText().checking,
-      unsupported: landingText().unsupported,
-      failed: landingText().failed
+      numeric: "서버 번호를 숫자로 입력해주세요.",
+      checking: "서버를 확인하고 있습니다.",
+      unsupported: "아직 지원하지 않는 서버입니다.",
+      failed: "서버를 확인하지 못했습니다. 잠시 후 다시 시도해주세요."
     },
     en: {
       title: "Which server are you from?",
@@ -1370,19 +1370,17 @@
     status.textContent = landingText().checking;
 
     try {
-      // Use the same public Supabase client as the application itself.
+      // Use the same public REST helper as the application itself.
       // Public RLS exposes active servers only.
-      const { data, error } = await supabase
-        .from("servers")
-        .select("code")
-        .eq("code", code)
-        .maybeSingle();
+      const rows = await restGet(
+        "servers" +
+        "?select=code" +
+        "&code=eq." + encodeURIComponent(code) +
+        "&is_active=eq.true" +
+        "&limit=1"
+      );
 
-      if (error) {
-        throw error;
-      }
-
-      if (!data) {
+      if (!Array.isArray(rows) || rows.length === 0) {
         status.textContent = landingText().unsupported;
         return;
       }
@@ -2334,6 +2332,8 @@
       language =
         next;
 
+      landingLanguage = language;
+
 
       localStorage.setItem(
         "wkapplication-language",
@@ -2341,6 +2341,7 @@
       );
 
 
+      renderLandingLanguage();
       renderLanguage();
 
     }
