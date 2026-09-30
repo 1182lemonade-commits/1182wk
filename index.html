@@ -1279,6 +1279,77 @@
 
   const serverCode = getServerCodeFromPath();
 
+  const landingTranslations = {
+    ko: {
+      title: "어느 서버에서 오셨나요?",
+      description: "서버 번호를 입력해주세요.",
+      submit: "확인",
+      numeric: landingText().numeric,
+      checking: landingText().checking,
+      unsupported: landingText().unsupported,
+      failed: landingText().failed
+    },
+    en: {
+      title: "Which server are you from?",
+      description: "Enter your server number.",
+      submit: "Continue",
+      numeric: "Please enter a numeric server number.",
+      checking: "Checking the server.",
+      unsupported: "This server is not supported yet.",
+      failed: "Unable to check the server. Please try again shortly."
+    },
+    ja: {
+      title: "どのサーバーから来ましたか？",
+      description: "サーバー番号を入力してください。",
+      submit: "確認",
+      numeric: "サーバー番号を数字で入力してください。",
+      checking: "サーバーを確認しています。",
+      unsupported: "このサーバーはまだ対応していません。",
+      failed: "サーバーを確認できませんでした。しばらくしてからもう一度お試しください。"
+    },
+    ru: {
+      title: "С какого вы сервера?",
+      description: "Введите номер сервера.",
+      submit: "Продолжить",
+      numeric: "Введите номер сервера цифрами.",
+      checking: "Проверяем сервер.",
+      unsupported: "Этот сервер пока не поддерживается.",
+      failed: "Не удалось проверить сервер. Повторите попытку чуть позже."
+    }
+  };
+
+  function getLandingLanguage() {
+    const saved =
+      localStorage.getItem("wkapplication-language") ||
+      localStorage.getItem("language") ||
+      "";
+
+    if (landingTranslations[saved]) return saved;
+
+    const browser = (navigator.language || "en").toLowerCase();
+    if (browser.startsWith("ko")) return "ko";
+    if (browser.startsWith("ja")) return "ja";
+    if (browser.startsWith("ru")) return "ru";
+    return "en";
+  }
+
+  let landingLanguage = getLandingLanguage();
+
+  function landingText() {
+    return landingTranslations[landingLanguage] || landingTranslations.en;
+  }
+
+  function renderLandingLanguage() {
+    const t = landingText();
+    document.getElementById("serverLandingTitle").textContent = t.title;
+    document.getElementById("serverLandingDescription").textContent = t.description;
+    document.getElementById("serverLandingSubmit").textContent = t.submit;
+    document.getElementById("serverLandingInput").setAttribute(
+      "aria-label",
+      t.description
+    );
+  }
+
   const isRootLanding =
     window.location.pathname === "/" ||
     window.location.pathname === "";
@@ -1290,45 +1361,36 @@
     const submit = document.getElementById("serverLandingSubmit");
 
     if (!/^[0-9]{1,10}$/.test(code)) {
-      status.textContent = "서버 번호를 숫자로 입력해주세요.";
+      status.textContent = landingText().numeric;
       return;
     }
 
     submit.disabled = true;
-    status.textContent = "서버를 확인하고 있습니다.";
+    status.textContent = landingText().checking;
 
     try {
-      const response = await fetch(
-        SUPABASE_URL +
-          "/rest/v1/servers?select=code&code=eq." +
-          encodeURIComponent(code) +
-          "&limit=1",
-        {
-          headers: {
-            apikey: SUPABASE_ANON_KEY,
-            Authorization: "Bearer " + SUPABASE_ANON_KEY
-          }
-        }
-      );
+      // Use the same public Supabase client as the application itself.
+      // Public RLS exposes active servers only.
+      const { data, error } = await supabase
+        .from("servers")
+        .select("code")
+        .eq("code", code)
+        .maybeSingle();
 
-      if (!response.ok) {
-        throw new Error("SERVER_LOOKUP_FAILED");
+      if (error) {
+        throw error;
       }
 
-      const rows = await response.json();
-
-      // Public RLS exposes active servers only. Inactive and nonexistent
-      // servers therefore receive the same public message.
-      if (!Array.isArray(rows) || rows.length === 0) {
-        status.textContent = "아직 지원하지 않는 서버입니다.";
+      if (!data) {
+        status.textContent = landingText().unsupported;
         return;
       }
 
       window.location.assign("/" + encodeURIComponent(code));
     } catch (error) {
-      console.error(error);
+      console.error("server landing lookup error:", error);
       status.textContent =
-        "서버를 확인하지 못했습니다. 잠시 후 다시 시도해주세요.";
+        landingText().failed;
     } finally {
       submit.disabled = false;
     }
@@ -1349,6 +1411,7 @@
       }
     });
 
+    renderLandingLanguage();
     landing.classList.remove("hidden");
 
     form.addEventListener("submit", async (event) => {
