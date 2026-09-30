@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
 
-  <title>S1182 WK Application</title>
+  <title>WK Application</title>
 
   <style>
     :root {
@@ -327,19 +327,19 @@
         novalidate
       >
 
-        <!-- S1182 CONFIRMATION -->
+        <!-- SERVER CONFIRMATION -->
         <div class="field">
 
           <label class="choice">
 
             <input
-              id="s1182Confirmed"
+              id="serverConfirmed"
               type="checkbox"
               required
             >
 
-            <span id="s1182ConfirmedText">
-              저는 S1182 소속임을 확인합니다.
+            <span id="serverConfirmedText">
+              서버 소속임을 확인합니다.
             </span>
 
           </label>
@@ -604,79 +604,47 @@
     "/functions/v1/wk-submit";
 
 
-  // Schedule constants and boundaries copied from the original S967 public index.html.
-const FIRST_OPEN_KST =
-  "2026-08-15T09:00:00+09:00";
+  // =========================================================
+  // SERVER-SPECIFIC AUTOMATIC SCHEDULE
+  // =========================================================
 
-const CYCLE_DAYS =
-  14;
+  function getAutomaticApplicationState(now = Date.now()) {
+    if (!settings) return { isOpen: false };
 
-const OPEN_DAYS =
-  5;
+    const firstOpen = new Date(settings.first_open_at).getTime();
+    const cycleDays = Number(settings.cycle_days);
+    const openDays = Number(settings.open_days);
 
-const DAY_MS =
-  24 * 60 * 60 * 1000;
+    if (
+      !Number.isFinite(firstOpen) ||
+      !Number.isInteger(cycleDays) ||
+      !Number.isInteger(openDays) ||
+      cycleDays < 1 ||
+      openDays < 1 ||
+      openDays > cycleDays
+    ) {
+      return { isOpen: false };
+    }
 
-const cycleMs =
-  CYCLE_DAYS * DAY_MS;
+    const dayMs = 24 * 60 * 60 * 1000;
+    const cycleMs = cycleDays * dayMs;
+    const openMs = openDays * dayMs;
 
-const openMs =
-  OPEN_DAYS * DAY_MS;
+    if (now < firstOpen) {
+      return { isOpen: false, nextOpen: firstOpen };
+    }
 
+    const elapsed = now - firstOpen;
+    const cycleIndex = Math.floor(elapsed / cycleMs);
+    const cycleStart = firstOpen + cycleIndex * cycleMs;
+    const cycleEnd = cycleStart + openMs;
 
-function getAutomaticApplicationState(now = Date.now()) {
+    if (now >= cycleStart && now < cycleEnd) {
+      return { isOpen: true, closeAt: cycleEnd };
+    }
 
-  const firstOpen =
-    new Date(
-      FIRST_OPEN_KST
-    ).getTime();
-
-
-  if (now < firstOpen) {
-    return {
-      isOpen: false,
-      nextOpen: firstOpen,
-    };
+    return { isOpen: false, nextOpen: cycleStart + cycleMs };
   }
-
-
-  const elapsed =
-    now - firstOpen;
-
-  const cycleIndex =
-    Math.floor(
-      elapsed / cycleMs
-    );
-
-  const cycleStart =
-    firstOpen +
-    cycleIndex * cycleMs;
-
-  const cycleEnd =
-    cycleStart + openMs;
-
-
-  if (
-    now >= cycleStart &&
-    now < cycleEnd
-  ) {
-    return {
-      isOpen: true,
-      closeAt: cycleEnd,
-    };
-  }
-
-
-  return {
-    isOpen: false,
-
-    nextOpen:
-      cycleStart +
-      cycleMs,
-  };
-}
-
-
 
   function resolveApplicationState(now = Date.now()) {
     if (!settings) return { isOpen: false, mode: null };
@@ -712,8 +680,8 @@ function getAutomaticApplicationState(now = Date.now()) {
       intro:
         "Please complete all required fields.",
 
-      s1182:
-        "I confirm that I am from S1182.",
+      serverConfirmation:
+        "I confirm that I am from S{server}.",
 
       name:
         "Player Name",
@@ -837,8 +805,8 @@ function getAutomaticApplicationState(now = Date.now()) {
       intro:
         "필수 항목을 모두 작성해 주세요.",
 
-      s1182:
-        "저는 S1182 소속임을 확인합니다.",
+      serverConfirmation:
+        "저는 S{server} 소속임을 확인합니다.",
 
       name:
         "플레이어명",
@@ -962,8 +930,8 @@ function getAutomaticApplicationState(now = Date.now()) {
       intro:
         "必須項目をすべて入力してください。",
 
-      s1182:
-        "私はS1182所属であることを確認します。",
+      serverConfirmation:
+        "私はS{server}所属であることを確認します。",
 
       name:
         "名前",
@@ -1087,8 +1055,8 @@ function getAutomaticApplicationState(now = Date.now()) {
       intro:
         "Заполните все обязательные поля.",
 
-      s1182:
-        "Я подтверждаю, что являюсь участником S1182.",
+      serverConfirmation:
+        "Я подтверждаю, что являюсь участником S{server}.",
 
       name:
         "Имя",
@@ -1207,6 +1175,20 @@ function getAutomaticApplicationState(now = Date.now()) {
 
 
   // =========================================================
+  // SERVER FROM URL
+  // =========================================================
+
+  function getServerCodeFromPath() {
+    const parts = window.location.pathname.split("/").filter(Boolean);
+    const candidate = parts[0] || "";
+    return /^[0-9]{1,10}$/.test(candidate) ? candidate : null;
+  }
+
+  const serverCode = getServerCodeFromPath();
+  let server = null;
+
+
+  // =========================================================
   // STATE
   // =========================================================
 
@@ -1229,7 +1211,7 @@ function getAutomaticApplicationState(now = Date.now()) {
 
   const savedLanguage =
     localStorage.getItem(
-      "s1182-language"
+      "wkapplication-language"
     );
 
   let language =
@@ -1286,7 +1268,7 @@ function getAutomaticApplicationState(now = Date.now()) {
 
   const savedTheme =
     localStorage.getItem(
-      "s1182-theme"
+      "wkapplication-theme"
     ) || "system";
 
   themeSelect.value =
@@ -1307,7 +1289,7 @@ function getAutomaticApplicationState(now = Date.now()) {
         value;
 
       localStorage.setItem(
-        "s1182-theme",
+        "wkapplication-theme",
         value
       );
 
@@ -1321,6 +1303,10 @@ function getAutomaticApplicationState(now = Date.now()) {
 
   function text() {
     return TEXT[language] || TEXT.ko;
+  }
+
+  function serverText(value) {
+    return String(value ?? "").replaceAll("{server}", serverCode || "");
   }
 
 
@@ -1575,7 +1561,7 @@ function getAutomaticApplicationState(now = Date.now()) {
 
 
   // =========================================================
-  // S1182 ORIGINAL PARTICIPATION BEHAVIOR
+  // ORIGINAL WK PARTICIPATION BEHAVIOR
   // =========================================================
 
   function updateParticipationState() {
@@ -1911,7 +1897,7 @@ function getAutomaticApplicationState(now = Date.now()) {
 
 
     document.title =
-      "S1182 " +
+      (serverCode ? "S" + serverCode + " " : "") +
       t.title;
 
 
@@ -2111,7 +2097,7 @@ function getAutomaticApplicationState(now = Date.now()) {
 
 
       localStorage.setItem(
-        "s1182-language",
+        "wkapplication-language",
         language
       );
 
@@ -2215,111 +2201,83 @@ function getAutomaticApplicationState(now = Date.now()) {
   // =========================================================
 
   async function loadData() {
+    if (!serverCode) {
+      settings = null;
+      surveyStatus.textContent = text().loadFailed;
+      surveyStatus.className = "survey-status closed";
+      closedBox.textContent = text().loadFailed;
+      closedBox.classList.remove("hidden");
+      wkForm.classList.add("hidden");
+      return;
+    }
 
     try {
+      const serverResult = await restGet(
+        "servers" +
+        "?select=id,code,name,is_active" +
+        "&code=eq." + encodeURIComponent(serverCode) +
+        "&is_active=eq.true" +
+        "&limit=1"
+      );
 
-      const [
-        settingsResult,
-        tierResult,
-        allianceResult,
-        agreementResult
-      ] =
+      server = Array.isArray(serverResult) ? (serverResult[0] || null) : null;
+      if (!server) throw new Error("SERVER_NOT_FOUND");
+
+      const serverId = Number(server.id);
+
+      const [settingsResult, tierResult, allianceResult, agreementResult] =
         await Promise.all([
-
           restGet(
             "survey_settings" +
-            "?select=*" +
-            "&order=id.asc" +
+            "?select=id,server_id,mode,is_open,title,description,first_open_at,cycle_days,open_days,updated_at" +
+            "&server_id=eq." + serverId +
             "&limit=1"
           ),
-
           restGet(
             "tiers" +
             "?select=id,name,sort_order,is_active" +
+            "&server_id=eq." + serverId +
             "&is_active=eq.true" +
             "&order=sort_order.asc,id.asc"
           ),
-
           restGet(
             "alliances" +
             "?select=id,name,sort_order,is_active" +
+            "&server_id=eq." + serverId +
             "&is_active=eq.true" +
             "&order=sort_order.asc,id.asc"
           ),
-
           restGet(
             "agreement_items" +
             "?select=id,content_ko,content_en,content_ja,content_ru,is_required,sort_order,is_active" +
+            "&server_id=eq." + serverId +
             "&is_active=eq.true" +
             "&order=sort_order.asc,id.asc"
           )
-
         ]);
 
+      settings = settingsResult?.[0] || null;
+      tiers = Array.isArray(tierResult) ? tierResult : [];
+      alliances = Array.isArray(allianceResult) ? allianceResult : [];
+      agreements = Array.isArray(agreementResult) ? agreementResult : [];
 
-      settings =
-        settingsResult?.[0] ||
-        null;
-
-
-      tiers =
-        Array.isArray(
-          tierResult
-        )
-          ? tierResult
-          : [];
-
-
-      alliances =
-        Array.isArray(
-          allianceResult
-        )
-          ? allianceResult
-          : [];
-
-
-      agreements =
-        Array.isArray(
-          agreementResult
-        )
-          ? agreementResult
-          : [];
-
-
+      if (!settings) throw new Error("SURVEY_SETTINGS_NOT_FOUND");
       renderLanguage();
 
-
     } catch (error) {
-
-      console.error(
-        error
-      );
-
-
-      settings =
-        null;
-
-
-      surveyStatus.textContent =
-        text().loadFailed;
-
-
-      surveyStatus.className =
-        "survey-status closed";
-
-
-      wkForm.classList.add(
-        "hidden"
-      );
-
-
-      setFormStatus(
-        text().loadFailed,
-        "error"
-      );
-
+      console.error(error);
+      server = null;
+      settings = null;
+      tiers = [];
+      alliances = [];
+      agreements = [];
+      surveyStatus.textContent = text().loadFailed;
+      surveyStatus.className = "survey-status closed";
+      closedBox.textContent = text().loadFailed;
+      closedBox.classList.remove("hidden");
+      wkForm.classList.add("hidden");
+      setFormStatus(text().loadFailed, "error");
     }
-
   }
 
 
@@ -2381,7 +2339,7 @@ function getAutomaticApplicationState(now = Date.now()) {
 
     if (
       !document.getElementById(
-        "s1182Confirmed"
+        "serverConfirmed"
       ).checked
     ) {
 
@@ -2611,7 +2569,10 @@ function getAutomaticApplicationState(now = Date.now()) {
       payload: {
         language,
 
-        s1182_confirmed:
+        server_code:
+          serverCode,
+
+        server_confirmed:
           true,
 
         player_name:
