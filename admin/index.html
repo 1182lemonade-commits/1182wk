@@ -2843,21 +2843,26 @@
   // =========================================================
 
   const APPLICATION_LABELS = {
-    troop_type: { fighter: "용사", shooter: "슈터", rider: "기수", all_strong: "전 병종 강함" },
+    troop_type: {
+      fighter: "Fighter",
+      shooter: "Shooter",
+      rider: "Rider",
+      all_strong: "All Strong"
+    },
     realtime_response: {
-      monitor_available: "실시간 모니터링 및 대응 가능",
-      monitor_unavailable: "실시간 모니터링 불가 / 후반부만 참여"
+      monitor_available: "Real-time monitoring available",
+      monitor_unavailable: "Real-time monitoring unavailable"
     },
     captain_role: {
-      captain: "리더",
-      sub_captain: "서브리더",
-      regular: "일반 참여",
-      negotiable: "필요 시 조정 가능 — 우선순위 낮음"
+      captain: "Captain",
+      sub_captain: "Subcaptain",
+      regular: "Regular Participant",
+      negotiable: "Negotiable"
     },
     participation_time: {
-      first_half: "전반부 (19:00–23:00)",
-      second_half: "후반부 (23:00–03:00)",
-      full: "전체 (19:00–03:00)"
+      first_half: "First Half",
+      second_half: "Second Half",
+      full: "Full"
     }
   };
 
@@ -2879,16 +2884,16 @@
     }
 
     const rows = applications.map(item => ({
-      "플레이어명": item.player_name ?? "",
-      "티어": item.tiers?.name ?? "",
-      "연맹": item.alliances?.name ?? "",
-      "병종": applicationLabel("troop_type", item.troop_type),
-      "부대 규모": item.troop_size ?? "",
-      "집결 규모": item.rally_size ?? "",
-      "실시간 대응": applicationLabel("realtime_response", item.realtime_response),
-      "리더 역할": applicationLabel("captain_role", item.captain_role),
-      "참여 시간": applicationLabel("participation_time", item.participation_time),
-      "신청일시": item.created_at ? new Date(item.created_at).toLocaleString("ko-KR") : ""
+      "Player Name": item.player_name ?? "",
+      "Tier": item.tiers?.name ?? "",
+      "Alliance": item.alliances?.name ?? "",
+      "Troop Type": applicationLabel("troop_type", item.troop_type),
+      "Troop Size": item.troop_size ?? "",
+      "Rally Size": item.rally_size ?? "",
+      "Real-time Response": applicationLabel("realtime_response", item.realtime_response),
+      "Captain Role": applicationLabel("captain_role", item.captain_role),
+      "Participation Time": applicationLabel("participation_time", item.participation_time),
+      "Submitted At": item.created_at ? new Date(item.created_at).toLocaleString("en-GB") : ""
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(rows);
@@ -2898,7 +2903,7 @@
     ];
 
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "WK 응답");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "WK Applications");
 
     const stamp = new Date().toISOString().slice(0, 10);
     XLSX.writeFile(workbook, `S1182-WK-${stamp}.xlsx`);
