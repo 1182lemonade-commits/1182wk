@@ -1341,6 +1341,14 @@
     const form = document.getElementById("serverLandingForm");
     const input = document.getElementById("serverLandingInput");
 
+    // The root page is only a server-entry landing page.
+    // Hide the normal WK application UI completely.
+    Array.from(document.body.children).forEach((element) => {
+      if (element !== landing && element.tagName !== "SCRIPT") {
+        element.style.display = "none";
+      }
+    });
+
     landing.classList.remove("hidden");
 
     form.addEventListener("submit", async (event) => {
