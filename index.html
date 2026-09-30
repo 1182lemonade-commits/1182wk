@@ -17,23 +17,9 @@
       --input: #ffffff;
       --accent: #315efb;
       --accent-text: #ffffff;
-      --danger: #d92d20;
       --success: #16803c;
-      --shadow: 0 12px 32px rgba(0, 0, 0, .08);
-    }
-
-    html[data-theme="dark"] {
-      --bg: #111318;
-      --panel: #191c23;
-      --text: #f2f4f7;
-      --muted: #a6adbb;
-      --border: #343944;
-      --input: #22262f;
-      --accent: #6f8cff;
-      --accent-text: #ffffff;
-      --danger: #ff746b;
-      --success: #62d98b;
-      --shadow: 0 12px 32px rgba(0, 0, 0, .25);
+      --danger: #d92d20;
+      --shadow: 0 12px 30px rgba(0,0,0,.07);
     }
 
     @media (prefers-color-scheme: dark) {
@@ -46,10 +32,24 @@
         --input: #22262f;
         --accent: #6f8cff;
         --accent-text: #ffffff;
-        --danger: #ff746b;
         --success: #62d98b;
-        --shadow: 0 12px 32px rgba(0, 0, 0, .25);
+        --danger: #ff746b;
+        --shadow: 0 12px 30px rgba(0,0,0,.25);
       }
+    }
+
+    html[data-theme="dark"] {
+      --bg: #111318;
+      --panel: #191c23;
+      --text: #f2f4f7;
+      --muted: #a6adbb;
+      --border: #343944;
+      --input: #22262f;
+      --accent: #6f8cff;
+      --accent-text: #ffffff;
+      --success: #62d98b;
+      --danger: #ff746b;
+      --shadow: 0 12px 30px rgba(0,0,0,.25);
     }
 
     * {
@@ -80,8 +80,21 @@
       font: inherit;
     }
 
+    button {
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
     .page {
-      width: min(760px, calc(100% - 28px));
+      width: min(720px, calc(100% - 24px));
       margin: 0 auto;
       padding: 24px 0 60px;
     }
@@ -91,67 +104,57 @@
       justify-content: flex-end;
       align-items: center;
       gap: 8px;
-      margin-bottom: 18px;
-      flex-wrap: wrap;
+      margin-bottom: 16px;
     }
 
-    .toolbar-select {
-      min-height: 40px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      background: var(--panel);
-      color: var(--text);
-      padding: 7px 10px;
+    .topbar select {
+      width: auto;
+      min-width: 100px;
     }
 
     .panel {
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 18px;
+      padding: 24px;
       box-shadow: var(--shadow);
-      padding: 28px;
     }
 
     h1 {
-      margin: 0;
-      font-size: clamp(25px, 5vw, 34px);
+      margin: 0 0 8px;
+      font-size: clamp(26px, 6vw, 38px);
       line-height: 1.2;
     }
 
-    .description {
+    .intro {
+      margin: 0 0 22px;
       color: var(--muted);
-      margin: 10px 0 0;
-      white-space: pre-wrap;
     }
 
-    .survey-state {
-      margin-top: 18px;
+    .survey-status {
       padding: 12px 14px;
+      margin-bottom: 20px;
       border: 1px solid var(--border);
       border-radius: 12px;
       font-weight: 700;
     }
 
-    .survey-state.open {
+    .survey-status.open {
       color: var(--success);
     }
 
-    .survey-state.closed {
+    .survey-status.closed {
       color: var(--danger);
     }
 
-    form {
-      margin-top: 28px;
-    }
-
     .field {
-      margin-bottom: 24px;
+      margin-bottom: 22px;
     }
 
     .label {
       display: block;
       margin-bottom: 8px;
-      font-weight: 700;
+      font-weight: 800;
     }
 
     .required {
@@ -160,102 +163,112 @@
 
     input[type="text"],
     select {
-      display: block;
       width: 100%;
       min-height: 46px;
       padding: 10px 12px;
-      color: var(--text);
-      background: var(--input);
       border: 1px solid var(--border);
       border-radius: 10px;
+      background: var(--input);
+      color: var(--text);
       outline: none;
     }
 
     input[type="text"]:focus,
     select:focus {
       border-color: var(--accent);
-      box-shadow:
-        0 0 0 3px
-        color-mix(in srgb, var(--accent) 15%, transparent);
     }
 
     .choices {
       display: grid;
-      gap: 9px;
+      gap: 8px;
     }
 
     .choice {
       display: flex;
       align-items: flex-start;
-      gap: 9px;
+      gap: 10px;
+      padding: 11px 12px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
       cursor: pointer;
+    }
+
+    .choice:hover {
+      border-color: var(--accent);
     }
 
     .choice input {
-      margin: 4px 0 0;
       flex: 0 0 auto;
+      margin-top: 4px;
     }
 
-    .agreement {
-      padding: 13px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
+    .choice span {
+      min-width: 0;
     }
 
-    .submit-row {
-      margin-top: 30px;
-    }
-
-    .submit-button {
-      width: 100%;
-      min-height: 50px;
-      border: 0;
-      border-radius: 12px;
-      background: var(--accent);
-      color: var(--accent-text);
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    .submit-button:disabled {
+    .choice.disabled {
       opacity: .55;
       cursor: not-allowed;
     }
 
-    .status {
+    .small {
+      margin: 8px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .agreements {
+      display: grid;
+      gap: 10px;
+    }
+
+    .submit-row {
+      margin-top: 26px;
+    }
+
+    .submit-button {
+      width: 100%;
+      min-height: 48px;
+      border: 0;
+      border-radius: 11px;
+      background: var(--accent);
+      color: var(--accent-text);
+      font-weight: 800;
+    }
+
+    .status-message {
       min-height: 24px;
-      margin-top: 14px;
-      text-align: center;
+      margin-top: 12px;
       font-weight: 700;
     }
 
-    .status.error {
-      color: var(--danger);
-    }
-
-    .status.success {
+    .status-message.success {
       color: var(--success);
     }
 
-    .hidden {
-      display: none !important;
+    .status-message.error {
+      color: var(--danger);
     }
 
-    .loading {
+    .closed-box {
+      padding: 24px 10px;
       text-align: center;
       color: var(--muted);
-      padding: 28px 0 8px;
     }
 
-    @media (max-width: 600px) {
+    @media (max-width: 560px) {
       .page {
-        width: min(100% - 18px, 760px);
-        padding-top: 12px;
+        width: min(100% - 14px, 720px);
+        padding-top: 10px;
       }
 
       .panel {
-        padding: 20px 16px;
+        padding: 17px;
         border-radius: 14px;
+      }
+
+      .topbar {
+        flex-wrap: wrap;
       }
     }
   </style>
@@ -267,22 +280,14 @@
 
     <div class="topbar">
 
-      <select
-        id="languageSelect"
-        class="toolbar-select"
-        aria-label="Language"
-      >
+      <select id="languageSelect" aria-label="Language">
         <option value="ko">한국어</option>
         <option value="en">English</option>
         <option value="ja">日本語</option>
         <option value="ru">Русский</option>
       </select>
 
-      <select
-        id="themeSelect"
-        class="toolbar-select"
-        aria-label="Theme"
-      >
+      <select id="themeSelect" aria-label="Theme">
         <option value="system">System</option>
         <option value="light">Light</option>
         <option value="dark">Dark</option>
@@ -297,45 +302,44 @@
         WK 신청
       </h1>
 
-      <p
-        id="pageDescription"
-        class="description"
-      ></p>
+      <p id="pageIntro" class="intro">
+        필수 항목을 모두 작성해 주세요.
+      </p>
+
 
       <div
-        id="surveyState"
-        class="survey-state"
+        id="surveyStatus"
+        class="survey-status"
       >
         Loading…
       </div>
 
+
       <div
-        id="loadingMessage"
-        class="loading"
-      >
-        Loading…
-      </div>
+        id="closedBox"
+        class="closed-box hidden"
+      ></div>
 
 
       <form
         id="wkForm"
         class="hidden"
+        novalidate
       >
 
         <!-- S1182 CONFIRMATION -->
-
         <div class="field">
 
           <label class="choice">
 
             <input
-              id="serverConfirmed"
+              id="s1182Confirmed"
               type="checkbox"
               required
             >
 
-            <span id="serverConfirmedText">
-              S1182 소속임을 확인합니다.
+            <span id="s1182ConfirmedText">
+              저는 S1182 소속임을 확인합니다.
             </span>
 
           </label>
@@ -343,8 +347,7 @@
         </div>
 
 
-        <!-- NAME -->
-
+        <!-- PLAYER NAME -->
         <div class="field">
 
           <label
@@ -352,7 +355,7 @@
             class="label"
             for="playerName"
           >
-            이름
+            플레이어명
             <span class="required">*</span>
           </label>
 
@@ -368,7 +371,6 @@
 
 
         <!-- TIER -->
-
         <div class="field">
 
           <label
@@ -380,10 +382,7 @@
             <span class="required">*</span>
           </label>
 
-          <select
-            id="tier"
-            required
-          >
+          <select id="tier" required>
             <option value="">
               Loading…
             </option>
@@ -393,7 +392,6 @@
 
 
         <!-- ALLIANCE -->
-
         <div class="field">
 
           <label
@@ -405,10 +403,7 @@
             <span class="required">*</span>
           </label>
 
-          <select
-            id="alliance"
-            required
-          >
+          <select id="alliance" required>
             <option value="">
               Loading…
             </option>
@@ -418,7 +413,6 @@
 
 
         <!-- TROOP TYPE -->
-
         <div class="field">
 
           <div
@@ -438,7 +432,6 @@
 
 
         <!-- TROOP SIZE -->
-
         <div class="field">
 
           <label
@@ -462,7 +455,6 @@
 
 
         <!-- RALLY SIZE -->
-
         <div class="field">
 
           <label
@@ -486,7 +478,6 @@
 
 
         <!-- REALTIME -->
-
         <div class="field">
 
           <div
@@ -506,14 +497,13 @@
 
 
         <!-- CAPTAIN -->
-
         <div class="field">
 
           <div
             id="captainRoleLabel"
             class="label"
           >
-            캡틴 역할
+            리더 가능 여부
             <span class="required">*</span>
           </div>
 
@@ -526,7 +516,6 @@
 
 
         <!-- PARTICIPATION -->
-
         <div class="field">
 
           <div
@@ -542,15 +531,34 @@
             class="choices"
           ></div>
 
+          <p
+            id="participationNotice"
+            class="small hidden"
+          ></p>
+
         </div>
 
 
         <!-- DYNAMIC AGREEMENTS -->
+        <div
+          id="agreementSection"
+          class="field hidden"
+        >
 
-        <div id="agreementContainer"></div>
+          <div
+            id="agreementTitle"
+            class="label"
+          >
+            확인 및 동의
+          </div>
 
+          <div
+            id="agreementChoices"
+            class="agreements"
+          ></div>
 
-        <!-- SUBMIT -->
+        </div>
+
 
         <div class="submit-row">
 
@@ -564,9 +572,10 @@
 
         </div>
 
+
         <div
           id="formStatus"
-          class="status"
+          class="status-message"
         ></div>
 
       </form>
@@ -577,7 +586,6 @@
 
 
 <script>
-
   // =========================================================
   // CONFIG
   // =========================================================
@@ -588,146 +596,38 @@
   const SUPABASE_KEY =
     "sb_publishable_2pk4zF1sHwD0k2MUAYGY8w_onArOsa2";
 
+  const REST_BASE =
+    SUPABASE_URL + "/rest/v1";
+
   const SUBMIT_URL =
     SUPABASE_URL +
     "/functions/v1/wk-submit";
 
 
   // =========================================================
-  // STATE
-  // =========================================================
-
-  let currentLanguage =
-    localStorage.getItem(
-      "s1182-language"
-    ) || "ko";
-
-  let settings = null;
-
-  let tiers = [];
-
-  let alliances = [];
-
-  let agreements = [];
-
-
-  // =========================================================
   // TRANSLATIONS
   // =========================================================
 
-  const translations = {
-
-    ko: {
-      title:
-        "WK 신청",
-
-      loading:
-        "불러오는 중…",
-
-      open:
-        "현재 신청을 받고 있습니다.",
-
-      closed:
-        "현재 신청이 마감되었습니다.",
-
-      serverConfirm:
-        "S1182 소속임을 확인합니다.",
-
-      playerName:
-        "이름",
-
-      tier:
-        "티어",
-
-      alliance:
-        "연맹",
-
-      select:
-        "선택하세요",
-
-      troopType:
-        "병종",
-
-      troopSize:
-        "부대 규모",
-
-      rallySize:
-        "집결 규모",
-
-      realtime:
-        "실시간 대응",
-
-      captain:
-        "캡틴 역할",
-
-      participation:
-        "참여 시간",
-
-      submit:
-        "제출",
-
-      submitting:
-        "제출 중…",
-
-      success:
-        "신청이 제출되었습니다.",
-
-      submitFailed:
-        "제출에 실패했습니다. 다시 시도해 주세요.",
-
-      loadFailed:
-        "설문 정보를 불러오지 못했습니다.",
-
-      troopTypes: [
-        "보병",
-        "기병",
-        "궁병"
-      ],
-
-      realtimeOptions: [
-        "가능",
-        "어려움"
-      ],
-
-      captainOptions: [
-        "가능",
-        "불가능"
-      ],
-
-      participationOptions: [
-        "전체 참여 가능",
-        "부분 참여 가능"
-      ]
-    },
-
+  const TEXT = {
 
     en: {
       title:
         "WK Application",
 
-      loading:
-        "Loading…",
+      intro:
+        "Please complete all required fields.",
 
-      open:
-        "Applications are currently open.",
-
-      closed:
-        "Applications are currently closed.",
-
-      serverConfirm:
+      s1182:
         "I confirm that I am from S1182.",
 
-      playerName:
-        "Name",
+      name:
+        "Player Name",
 
       tier:
         "Tier",
 
       alliance:
         "Alliance",
-
-      select:
-        "Select",
 
       troopType:
         "Troop Type",
@@ -741,11 +641,64 @@
       realtime:
         "Real-time Response",
 
-      captain:
+      captainRole:
         "Captain Role",
 
       participation:
         "Participation Time",
+
+      agreementTitle:
+        "Confirmation & Agreement",
+
+      troopTypes: {
+        fighter:
+          "Fighter",
+
+        shooter:
+          "Shooter",
+
+        rider:
+          "Rider",
+
+        all_strong:
+          "All Strong"
+      },
+
+      realtimeOptions: {
+        monitor_available:
+          "I can monitor and respond in real time.",
+
+        monitor_unavailable:
+          "I cannot monitor in real time. I will participate in the second half only."
+      },
+
+      captainRoles: {
+        captain:
+          "Available as Captain",
+
+        sub_captain:
+          "Available as Subcaptain",
+
+        regular:
+          "Regular Participant",
+
+        negotiable:
+          "Negotiable if needed — lower priority"
+      },
+
+      participationTimes: {
+        first_half:
+          "First Half (UTC 10:00–14:00)",
+
+        second_half:
+          "Second Half (UTC 14:00–18:00)",
+
+        full:
+          "Full (UTC 10:00–18:00)"
+      },
+
+      forcedSecondHalf:
+        "Participation Time is fixed to the second half because real-time monitoring is unavailable.",
 
       submit:
         "Submit",
@@ -754,64 +707,177 @@
         "Submitting…",
 
       success:
-        "Your application has been submitted.",
-
-      submitFailed:
-        "Submission failed. Please try again.",
+        "Your application has been successfully submitted.",
 
       loadFailed:
         "Failed to load the application form.",
 
-      troopTypes: [
-        "Infantry",
-        "Cavalry",
-        "Archer"
-      ],
+      submitFailed:
+        "Submission failed.",
 
-      realtimeOptions: [
-        "Available",
-        "Difficult"
-      ],
+      select:
+        "Select",
 
-      captainOptions: [
-        "Available",
-        "Unavailable"
-      ],
+      required:
+        "Please complete all required fields.",
 
-      participationOptions: [
-        "Full participation",
-        "Partial participation"
-      ]
+      namePlaceholder:
+        "Please copy&paste😉",
+
+      numberPlaceholder:
+        "Please enter a number",
+
+      applicationsOpen:
+        "Applications are currently open.",
+
+      applicationsClosed:
+        "Applications are currently closed."
+    },
+
+
+    ko: {
+      title:
+        "WK 신청",
+
+      intro:
+        "필수 항목을 모두 작성해 주세요.",
+
+      s1182:
+        "저는 S1182 소속임을 확인합니다.",
+
+      name:
+        "플레이어명",
+
+      tier:
+        "티어",
+
+      alliance:
+        "연맹",
+
+      troopType:
+        "병종",
+
+      troopSize:
+        "부대 규모",
+
+      rallySize:
+        "집결 규모",
+
+      realtime:
+        "실시간 대응",
+
+      captainRole:
+        "리더 가능 여부",
+
+      participation:
+        "참여 시간",
+
+      agreementTitle:
+        "확인 및 동의",
+
+      troopTypes: {
+        fighter:
+          "용사",
+
+        shooter:
+          "슈터",
+
+        rider:
+          "기수",
+
+        all_strong:
+          "전 병종 강함"
+      },
+
+      realtimeOptions: {
+        monitor_available:
+          "실시간 모니터링 및 대응이 가능합니다.",
+
+        monitor_unavailable:
+          "실시간 모니터링이 불가능하며 후반부에만 참여합니다."
+      },
+
+      captainRoles: {
+        captain:
+          "리더",
+
+        sub_captain:
+          "서브리더",
+
+        regular:
+          "일반 참여",
+
+        negotiable:
+          "필요 시 조정 가능 — 우선순위 낮음"
+      },
+
+      participationTimes: {
+        first_half:
+          "전반부 (19:00–23:00)",
+
+        second_half:
+          "후반부 (23:00–03:00)",
+
+        full:
+          "전체 (19:00–03:00)"
+      },
+
+      forcedSecondHalf:
+        "실시간 모니터링이 불가능하므로 참여 시간이 후반부로 고정됩니다.",
+
+      submit:
+        "제출",
+
+      submitting:
+        "제출 중…",
+
+      success:
+        "신청이 성공적으로 제출되었습니다.",
+
+      loadFailed:
+        "신청서를 불러오지 못했습니다.",
+
+      submitFailed:
+        "제출에 실패했습니다.",
+
+      select:
+        "선택",
+
+      required:
+        "필수 항목을 모두 작성해 주세요.",
+
+      namePlaceholder:
+        "복붙해주세용😉",
+
+      numberPlaceholder:
+        "숫자를 입력해주세요",
+
+      applicationsOpen:
+        "현재 WK 신청을 받고 있습니다.",
+
+      applicationsClosed:
+        "현재 WK 신청 기간이 아닙니다."
     },
 
 
     ja: {
       title:
-        "WK 申請",
+        "WK申請",
 
-      loading:
-        "読み込み中…",
+      intro:
+        "必須項目をすべて入力してください。",
 
-      open:
-        "現在、申請を受け付けています。",
+      s1182:
+        "私はS1182所属であることを確認します。",
 
-      closed:
-        "現在、申請受付は終了しています。",
-
-      serverConfirm:
-        "S1182所属であることを確認します。",
-
-      playerName:
+      name:
         "名前",
 
       tier:
-        "ティア",
+        "Tier",
 
       alliance:
-        "同盟",
-
-      select:
-        "選択してください",
+        "ギルド",
 
       troopType:
         "兵種",
@@ -820,16 +886,69 @@
         "部隊規模",
 
       rallySize:
-        "集結規模",
+        "ギャザー規模",
 
       realtime:
         "リアルタイム対応",
 
-      captain:
-        "キャプテン役",
+      captainRole:
+        "リーダー役割",
 
       participation:
         "参加時間",
+
+      agreementTitle:
+        "確認および同意",
+
+      troopTypes: {
+        fighter:
+          "ファイター",
+
+        shooter:
+          "シューター",
+
+        rider:
+          "ライダー",
+
+        all_strong:
+          "全兵種得意"
+      },
+
+      realtimeOptions: {
+        monitor_available:
+          "リアルタイムで監視・対応できます。",
+
+        monitor_unavailable:
+          "リアルタイム対応はできず、後半のみ参加します。"
+      },
+
+      captainRoles: {
+        captain:
+          "リーダー",
+
+        sub_captain:
+          "サブリーダー",
+
+        regular:
+          "一般参加",
+
+        negotiable:
+          "調整可能 — 優先度低め"
+      },
+
+      participationTimes: {
+        first_half:
+          "前半 (19:00–23:00)",
+
+        second_half:
+          "後半 (23:00–03:00)",
+
+        full:
+          "全時間 (19:00–03:00)"
+      },
+
+      forcedSecondHalf:
+        "リアルタイム対応不可のため、参加時間は後半に固定されます。",
 
       submit:
         "送信",
@@ -838,34 +957,31 @@
         "送信中…",
 
       success:
-        "申請が送信されました。",
-
-      submitFailed:
-        "送信に失敗しました。もう一度お試しください。",
+        "申請を正常に送信しました。",
 
       loadFailed:
         "申請フォームを読み込めませんでした。",
 
-      troopTypes: [
-        "歩兵",
-        "騎兵",
-        "弓兵"
-      ],
+      submitFailed:
+        "送信に失敗しました。",
 
-      realtimeOptions: [
-        "可能",
-        "難しい"
-      ],
+      select:
+        "選択",
 
-      captainOptions: [
-        "可能",
-        "不可"
-      ],
+      required:
+        "必須項目をすべて入力してください。",
 
-      participationOptions: [
-        "全時間参加可能",
-        "一部参加可能"
-      ]
+      namePlaceholder:
+        "コピペでお願いします。😉",
+
+      numberPlaceholder:
+        "数字を入力してください",
+
+      applicationsOpen:
+        "現在WK申請を受け付けています。",
+
+      applicationsClosed:
+        "現在WK申請期間ではありません。"
     },
 
 
@@ -873,19 +989,13 @@
       title:
         "Заявка WK",
 
-      loading:
-        "Загрузка…",
+      intro:
+        "Заполните все обязательные поля.",
 
-      open:
-        "Приём заявок открыт.",
+      s1182:
+        "Я подтверждаю, что являюсь участником S1182.",
 
-      closed:
-        "Приём заявок закрыт.",
-
-      serverConfirm:
-        "Я подтверждаю, что я из S1182.",
-
-      playerName:
+      name:
         "Имя",
 
       tier:
@@ -894,26 +1004,76 @@
       alliance:
         "Альянс",
 
-      select:
-        "Выберите",
-
       troopType:
         "Тип войск",
 
       troopSize:
-        "Размер войск",
+        "Размер Отряда",
 
       rallySize:
-        "Размер сбора",
+        "Размер Групповой Атаки",
 
       realtime:
-        "Реакция в реальном времени",
+        "Ответ в реальном времени",
 
-      captain:
+      captainRole:
         "Роль капитана",
 
       participation:
         "Время участия",
+
+      agreementTitle:
+        "Подтверждение и согласие",
+
+      troopTypes: {
+        fighter:
+          "Боец",
+
+        shooter:
+          "Стрелок",
+
+        rider:
+          "Наездник",
+
+        all_strong:
+          "Все типы войск"
+      },
+
+      realtimeOptions: {
+        monitor_available:
+          "Могу находиться онлайн",
+
+        monitor_unavailable:
+          "Не могу находиться онлайн — только вторая смена"
+      },
+
+      captainRoles: {
+        captain:
+          "Могу быть командиром",
+
+        sub_captain:
+          "Могу быть заместителем командира",
+
+        regular:
+          "Обычный участник",
+
+        negotiable:
+          "Можно обсудить при необходимости (Низкий приоритет)"
+      },
+
+      participationTimes: {
+        first_half:
+          "Первые 4 часа (13:00 - 17:00 МСК )",
+
+        second_half:
+          "Последние 4 часа ( 17:00 - 21:00 МСК )",
+
+        full:
+          "Полностью ( 13:00 - 21:00 МСК )"
+      },
+
+      forcedSecondHalf:
+        "Поскольку онлайн-мониторинг недоступен, время участия автоматически установлено на вторую половину.",
 
       submit:
         "Отправить",
@@ -922,37 +1082,60 @@
         "Отправка…",
 
       success:
-        "Заявка отправлена.",
-
-      submitFailed:
-        "Не удалось отправить заявку. Попробуйте ещё раз.",
+        "Заявка успешно отправлена.",
 
       loadFailed:
         "Не удалось загрузить форму.",
 
-      troopTypes: [
-        "Пехота",
-        "Кавалерия",
-        "Лучники"
-      ],
+      submitFailed:
+        "Не удалось отправить заявку.",
 
-      realtimeOptions: [
-        "Могу",
-        "Сложно"
-      ],
+      select:
+        "Выберите",
 
-      captainOptions: [
-        "Могу",
-        "Не могу"
-      ],
+      required:
+        "Заполните все обязательные поля.",
 
-      participationOptions: [
-        "Полное участие",
-        "Частичное участие"
-      ]
+      namePlaceholder:
+        "Скопируйте и вставьте, пожалуйста 😉))",
+
+      numberPlaceholder:
+        "Введите число",
+
+      applicationsOpen:
+        "Приём заявок WK открыт.",
+
+      applicationsClosed:
+        "Приём заявок WK сейчас закрыт."
     }
-
   };
+
+
+  // =========================================================
+  // STATE
+  // =========================================================
+
+  const VALID_LANGUAGES =
+    ["ko", "en", "ja", "ru"];
+
+  let language =
+    localStorage.getItem(
+      "s1182-language"
+    ) || "ko";
+
+  if (
+    !VALID_LANGUAGES.includes(
+      language
+    )
+  ) {
+    language = "ko";
+  }
+
+
+  let settings = null;
+  let tiers = [];
+  let alliances = [];
+  let agreements = [];
 
 
   // =========================================================
@@ -969,39 +1152,24 @@
       "themeSelect"
     );
 
-  const pageTitle =
-    document.getElementById(
-      "pageTitle"
-    );
-
-  const pageDescription =
-    document.getElementById(
-      "pageDescription"
-    );
-
-  const surveyState =
-    document.getElementById(
-      "surveyState"
-    );
-
-  const loadingMessage =
-    document.getElementById(
-      "loadingMessage"
-    );
-
   const wkForm =
     document.getElementById(
       "wkForm"
     );
 
+  const surveyStatus =
+    document.getElementById(
+      "surveyStatus"
+    );
+
+  const closedBox =
+    document.getElementById(
+      "closedBox"
+    );
+
   const submitButton =
     document.getElementById(
       "submitButton"
-    );
-
-  const formStatus =
-    document.getElementById(
-      "formStatus"
     );
 
 
@@ -1020,9 +1188,11 @@
   document.documentElement.dataset.theme =
     savedTheme;
 
+
   themeSelect.addEventListener(
     "change",
     () => {
+
       const value =
         themeSelect.value;
 
@@ -1033,165 +1203,75 @@
         "s1182-theme",
         value
       );
+
     }
   );
 
 
   // =========================================================
-  // LANGUAGE
+  // HELPERS
   // =========================================================
 
-  if (
-    !translations[currentLanguage]
-  ) {
-    currentLanguage = "ko";
+  function text() {
+    return TEXT[language] || TEXT.ko;
   }
 
-  languageSelect.value =
-    currentLanguage;
 
-  languageSelect.addEventListener(
-    "change",
-    () => {
-      currentLanguage =
-        languageSelect.value;
+  function setFormStatus(
+    message = "",
+    type = ""
+  ) {
 
-      localStorage.setItem(
-        "s1182-language",
-        currentLanguage
+    const element =
+      document.getElementById(
+        "formStatus"
       );
 
-      renderLanguage();
-    }
-  );
+    element.textContent =
+      message;
 
+    element.className =
+      "status-message" +
+      (type ? " " + type : "");
 
-  function t() {
-    return translations[
-      currentLanguage
-    ];
   }
 
 
-  // =========================================================
-  // RENDER LANGUAGE
-  // =========================================================
-
-  function renderLanguage() {
-    const lang = t();
-
-    document.documentElement.lang =
-      currentLanguage;
-
-    /*
-      survey_settings.title은 현재 단일 언어 컬럼이므로
-      기본 제목은 각 언어 번역을 사용한다.
-    */
-
-    pageTitle.textContent =
-      lang.title;
-
-    pageDescription.textContent =
-      settings?.description || "";
-
-    document.getElementById(
-      "serverConfirmedText"
-    ).textContent =
-      lang.serverConfirm;
-
-
-    document.getElementById(
-      "playerNameLabel"
-    ).innerHTML =
-      lang.playerName +
-      ' <span class="required">*</span>';
-
-
-    document.getElementById(
-      "tierLabel"
-    ).innerHTML =
-      lang.tier +
-      ' <span class="required">*</span>';
-
-
-    document.getElementById(
-      "allianceLabel"
-    ).innerHTML =
-      lang.alliance +
-      ' <span class="required">*</span>';
-
-
-    document.getElementById(
-      "troopTypeLabel"
-    ).innerHTML =
-      lang.troopType +
-      ' <span class="required">*</span>';
-
-
-    document.getElementById(
-      "troopSizeLabel"
-    ).innerHTML =
-      lang.troopSize +
-      ' <span class="required">*</span>';
-
-
-    document.getElementById(
-      "rallySizeLabel"
-    ).innerHTML =
-      lang.rallySize +
-      ' <span class="required">*</span>';
-
-
-    document.getElementById(
-      "realtimeLabel"
-    ).innerHTML =
-      lang.realtime +
-      ' <span class="required">*</span>';
-
-
-    document.getElementById(
-      "captainRoleLabel"
-    ).innerHTML =
-      lang.captain +
-      ' <span class="required">*</span>';
-
-
-    document.getElementById(
-      "participationTimeLabel"
-    ).innerHTML =
-      lang.participation +
-      ' <span class="required">*</span>';
-
-
-    submitButton.textContent =
-      lang.submit;
-
-
-    renderSurveyState();
-
-    renderSelects();
-
-    renderChoices();
-
-    renderAgreements();
-  }
-
-
-  // =========================================================
-  // SUPABASE REST
-  // =========================================================
-
-  async function supabaseGet(
-    table,
-    query = ""
+  async function parseJsonResponse(
+    response
   ) {
+
+    const data =
+      await response
+        .json()
+        .catch(() => ({}));
+
+    if (!response.ok) {
+
+      const error =
+        new Error(
+          data.error ||
+          "REQUEST_FAILED"
+        );
+
+      error.status =
+        response.status;
+
+      throw error;
+    }
+
+    return data;
+  }
+
+
+  async function restGet(path) {
+
     const response =
       await fetch(
-        SUPABASE_URL +
-        "/rest/v1/" +
-        table +
-        query,
+        REST_BASE + "/" + path,
         {
+          method: "GET",
+
           headers: {
             apikey:
               SUPABASE_KEY,
@@ -1203,188 +1283,340 @@
         }
       );
 
-    if (!response.ok) {
-      throw new Error(
-        "Supabase request failed: " +
-        response.status
-      );
+
+    return await parseJsonResponse(
+      response
+    );
+  }
+
+
+  function parseNonNegativeInteger(
+    value
+  ) {
+
+    const normalized =
+      String(value ?? "")
+        .trim()
+        .replaceAll(",", "");
+
+
+    if (
+      !/^\d+$/.test(
+        normalized
+      )
+    ) {
+      return null;
     }
 
-    return response.json();
+
+    const number =
+      Number(normalized);
+
+
+    if (
+      !Number.isSafeInteger(
+        number
+      ) ||
+      number < 0
+    ) {
+      return null;
+    }
+
+
+    return number;
+  }
+
+
+  function getCheckedValue(
+    name
+  ) {
+
+    return (
+      document.querySelector(
+        `input[name="${name}"]:checked`
+      )?.value || ""
+    );
   }
 
 
   // =========================================================
-  // LOAD FORM
+  // RADIO GROUP
   // =========================================================
 
-  async function loadForm() {
-    loadingMessage.textContent =
-      t().loading;
+  function createRadioGroup(
+    containerId,
+    name,
+    values
+  ) {
 
-    try {
+    const container =
+      document.getElementById(
+        containerId
+      );
 
-      const [
-        settingsData,
-        tierData,
-        allianceData,
-        agreementData
-      ] = await Promise.all([
-
-        supabaseGet(
-          "survey_settings",
-          "?select=*&order=id.asc&limit=1"
-        ),
-
-        supabaseGet(
-          "tiers",
-          "?select=id,name,sort_order&is_active=eq.true&order=sort_order.asc,id.asc"
-        ),
-
-        supabaseGet(
-          "alliances",
-          "?select=id,name,sort_order&is_active=eq.true&order=sort_order.asc,id.asc"
-        ),
-
-        supabaseGet(
-          "agreement_items",
-          "?select=id,content_ko,content_en,content_ja,content_ru,is_required,sort_order&is_active=eq.true&order=sort_order.asc,id.asc"
-        )
-
-      ]);
+    container.innerHTML =
+      "";
 
 
-      settings =
-        settingsData[0] || null;
+    Object.entries(values)
+      .forEach(
+        ([value, label]) => {
 
-      tiers =
-        tierData || [];
+          const wrapper =
+            document.createElement(
+              "label"
+            );
 
-      alliances =
-        allianceData || [];
-
-      agreements =
-        agreementData || [];
+          wrapper.className =
+            "choice";
 
 
-      loadingMessage.classList.add(
+          const input =
+            document.createElement(
+              "input"
+            );
+
+          input.type =
+            "radio";
+
+          input.name =
+            name;
+
+          input.value =
+            value;
+
+          input.required =
+            true;
+
+
+          const span =
+            document.createElement(
+              "span"
+            );
+
+          span.textContent =
+            label;
+
+
+          wrapper.appendChild(
+            input
+          );
+
+          wrapper.appendChild(
+            span
+          );
+
+          container.appendChild(
+            wrapper
+          );
+
+        }
+      );
+  }
+
+
+  function renderRadioGroups() {
+
+    const t =
+      text();
+
+
+    createRadioGroup(
+      "troopTypeChoices",
+      "troop_type",
+      t.troopTypes
+    );
+
+
+    createRadioGroup(
+      "realtimeChoices",
+      "realtime_response",
+      t.realtimeOptions
+    );
+
+
+    createRadioGroup(
+      "captainRoleChoices",
+      "captain_role",
+      t.captainRoles
+    );
+
+
+    createRadioGroup(
+      "participationTimeChoices",
+      "participation_time",
+      t.participationTimes
+    );
+
+
+    document
+      .querySelectorAll(
+        'input[name="realtime_response"]'
+      )
+      .forEach(
+        input => {
+
+          input.addEventListener(
+            "change",
+            updateParticipationState
+          );
+
+        }
+      );
+
+  }
+
+
+  // =========================================================
+  // S1182 ORIGINAL PARTICIPATION BEHAVIOR
+  // =========================================================
+
+  function updateParticipationState() {
+
+    const t =
+      text();
+
+
+    const realtime =
+      getCheckedValue(
+        "realtime_response"
+      );
+
+
+    const forced =
+      realtime ===
+      "monitor_unavailable";
+
+
+    const inputs =
+      document.querySelectorAll(
+        'input[name="participation_time"]'
+      );
+
+
+    inputs.forEach(
+      input => {
+
+        const label =
+          input.closest(
+            ".choice"
+          );
+
+
+        if (forced) {
+
+          if (
+            input.value ===
+            "second_half"
+          ) {
+
+            input.checked =
+              true;
+
+            input.disabled =
+              false;
+
+            label?.classList.remove(
+              "disabled"
+            );
+
+          } else {
+
+            input.checked =
+              false;
+
+            input.disabled =
+              true;
+
+            label?.classList.add(
+              "disabled"
+            );
+
+          }
+
+        } else {
+
+          input.disabled =
+            false;
+
+          label?.classList.remove(
+            "disabled"
+          );
+
+        }
+
+      }
+    );
+
+
+    const notice =
+      document.getElementById(
+        "participationNotice"
+      );
+
+
+    if (forced) {
+
+      notice.textContent =
+        t.forcedSecondHalf;
+
+      notice.classList.remove(
         "hidden"
       );
 
-
-      renderLanguage();
-
-
-      if (
-        settings?.is_open
-      ) {
-        wkForm.classList.remove(
-          "hidden"
-        );
-      } else {
-        wkForm.classList.add(
-          "hidden"
-        );
-      }
-
-    } catch (error) {
-
-      console.error(error);
-
-      loadingMessage.textContent =
-        t().loadFailed;
-
-      surveyState.textContent =
-        t().loadFailed;
-
-      surveyState.className =
-        "survey-state closed";
-
-    }
-  }
-
-
-  // =========================================================
-  // SURVEY STATE
-  // =========================================================
-
-  function renderSurveyState() {
-
-    if (!settings) {
-
-      surveyState.textContent =
-        t().loading;
-
-      surveyState.className =
-        "survey-state";
-
-      return;
-    }
-
-
-    if (settings.is_open) {
-
-      surveyState.textContent =
-        t().open;
-
-      surveyState.className =
-        "survey-state open";
-
     } else {
 
-      surveyState.textContent =
-        t().closed;
+      notice.textContent =
+        "";
 
-      surveyState.className =
-        "survey-state closed";
+      notice.classList.add(
+        "hidden"
+      );
 
     }
+
   }
 
 
   // =========================================================
-  // TIER / ALLIANCE
+  // SELECT OPTIONS
   // =========================================================
 
-  function renderSelects() {
+  function renderTierOptions() {
 
-    const tier =
+    const select =
       document.getElementById(
         "tier"
       );
 
-    const alliance =
-      document.getElementById(
-        "alliance"
-      );
+
+    const current =
+      select.value;
 
 
-    const selectedTier =
-      tier.value;
-
-    const selectedAlliance =
-      alliance.value;
+    select.innerHTML =
+      "";
 
 
-    tier.innerHTML = "";
-
-
-    const tierPlaceholder =
+    const placeholder =
       document.createElement(
         "option"
       );
 
-    tierPlaceholder.value = "";
+    placeholder.value =
+      "";
 
-    tierPlaceholder.textContent =
-      t().select;
+    placeholder.textContent =
+      text().select;
 
-    tier.appendChild(
-      tierPlaceholder
+    select.appendChild(
+      placeholder
     );
 
 
-    for (const item of tiers) {
+    for (
+      const item of tiers
+    ) {
 
       const option =
         document.createElement(
@@ -1392,32 +1624,62 @@
         );
 
       option.value =
-        item.id;
+        String(item.id);
 
       option.textContent =
         item.name;
 
-      tier.appendChild(
+      select.appendChild(
         option
       );
+
     }
 
 
-    alliance.innerHTML = "";
+    if (
+      [...select.options]
+        .some(
+          option =>
+            option.value ===
+            current
+        )
+    ) {
+      select.value =
+        current;
+    }
+
+  }
 
 
-    const alliancePlaceholder =
+  function renderAllianceOptions() {
+
+    const select =
+      document.getElementById(
+        "alliance"
+      );
+
+
+    const current =
+      select.value;
+
+
+    select.innerHTML =
+      "";
+
+
+    const placeholder =
       document.createElement(
         "option"
       );
 
-    alliancePlaceholder.value = "";
+    placeholder.value =
+      "";
 
-    alliancePlaceholder.textContent =
-      t().select;
+    placeholder.textContent =
+      text().select;
 
-    alliance.appendChild(
-      alliancePlaceholder
+    select.appendChild(
+      placeholder
     );
 
 
@@ -1431,230 +1693,30 @@
         );
 
       option.value =
-        item.id;
+        String(item.id);
 
       option.textContent =
         item.name;
 
-      alliance.appendChild(
+      select.appendChild(
         option
       );
+
     }
 
 
     if (
-      [...tier.options].some(
-        option =>
-          option.value ===
-          selectedTier
-      )
+      [...select.options]
+        .some(
+          option =>
+            option.value ===
+            current
+        )
     ) {
-      tier.value =
-        selectedTier;
+      select.value =
+        current;
     }
 
-
-    if (
-      [...alliance.options].some(
-        option =>
-          option.value ===
-          selectedAlliance
-      )
-    ) {
-      alliance.value =
-        selectedAlliance;
-    }
-  }
-
-
-  // =========================================================
-  // RADIO GROUP
-  // =========================================================
-
-  function createRadioGroup(
-    containerId,
-    name,
-    values,
-    labels
-  ) {
-
-    const container =
-      document.getElementById(
-        containerId
-      );
-
-
-    const previous =
-      document.querySelector(
-        'input[name="' +
-        name +
-        '"]:checked'
-      )?.value;
-
-
-    container.innerHTML = "";
-
-
-    values.forEach(
-      (value, index) => {
-
-        const label =
-          document.createElement(
-            "label"
-          );
-
-        label.className =
-          "choice";
-
-
-        const input =
-          document.createElement(
-            "input"
-          );
-
-        input.type =
-          "radio";
-
-        input.name =
-          name;
-
-        input.value =
-          value;
-
-        input.required =
-          true;
-
-
-        if (
-          previous === value
-        ) {
-          input.checked =
-            true;
-        }
-
-
-        const span =
-          document.createElement(
-            "span"
-          );
-
-        span.textContent =
-          labels[index];
-
-
-        label.appendChild(
-          input
-        );
-
-        label.appendChild(
-          span
-        );
-
-        container.appendChild(
-          label
-        );
-      }
-    );
-  }
-
-
-  function renderChoices() {
-
-    const lang =
-      t();
-
-
-    createRadioGroup(
-      "troopTypeChoices",
-      "troopType",
-
-      [
-        "infantry",
-        "cavalry",
-        "archer"
-      ],
-
-      lang.troopTypes
-    );
-
-
-    createRadioGroup(
-      "realtimeChoices",
-      "realtimeResponse",
-
-      [
-        "available",
-        "difficult"
-      ],
-
-      lang.realtimeOptions
-    );
-
-
-    createRadioGroup(
-      "captainRoleChoices",
-      "captainRole",
-
-      [
-        "available",
-        "unavailable"
-      ],
-
-      lang.captainOptions
-    );
-
-
-    createRadioGroup(
-      "participationTimeChoices",
-      "participationTime",
-
-      [
-        "full",
-        "partial"
-      ],
-
-      lang.participationOptions
-    );
-  }
-
-
-  // =========================================================
-  // AGREEMENT TRANSLATION
-  // =========================================================
-
-  function getAgreementText(
-    item
-  ) {
-
-    switch (
-      currentLanguage
-    ) {
-
-      case "ko":
-        return (
-          item.content_ko || ""
-        );
-
-      case "en":
-        return (
-          item.content_en || ""
-        );
-
-      case "ja":
-        return (
-          item.content_ja || ""
-        );
-
-      case "ru":
-        return (
-          item.content_ru || ""
-        );
-
-      default:
-        return (
-          item.content_ko || ""
-        );
-    }
   }
 
 
@@ -1662,54 +1724,68 @@
   // DYNAMIC AGREEMENTS
   // =========================================================
 
+  function agreementContent(
+    item
+  ) {
+
+    const field =
+      "content_" +
+      language;
+
+
+    return (
+      item[field] ||
+      item.content_ko ||
+      ""
+    );
+  }
+
+
   function renderAgreements() {
+
+    const section =
+      document.getElementById(
+        "agreementSection"
+      );
+
 
     const container =
       document.getElementById(
-        "agreementContainer"
+        "agreementChoices"
       );
 
 
-    /*
-      언어를 변경해도
-      이미 체크한 상태는 유지한다.
-    */
+    container.innerHTML =
+      "";
 
-    const checked =
-      new Set(
-        [
-          ...container.querySelectorAll(
-            'input[data-agreement="true"]:checked'
-          )
-        ].map(
-          input =>
-            String(input.value)
-        )
+
+    if (
+      !agreements.length
+    ) {
+
+      section.classList.add(
+        "hidden"
       );
 
+      return;
+    }
 
-    container.innerHTML = "";
+
+    section.classList.remove(
+      "hidden"
+    );
 
 
     for (
       const item of agreements
     ) {
 
-      const field =
-        document.createElement(
-          "div"
-        );
-
-      field.className =
-        "field agreement";
-
-
-      const label =
+      const wrapper =
         document.createElement(
           "label"
         );
 
-      label.className =
+      wrapper.className =
         "choice";
 
 
@@ -1721,24 +1797,13 @@
       input.type =
         "checkbox";
 
-      input.value =
-        item.id;
-
-      input.dataset.agreement =
-        "true";
+      input.dataset.agreementId =
+        String(item.id);
 
       input.required =
-        item.is_required === true;
-
-
-      if (
-        checked.has(
-          String(item.id)
-        )
-      ) {
-        input.checked =
-          true;
-      }
+        Boolean(
+          item.is_required
+        );
 
 
       const span =
@@ -1747,86 +1812,806 @@
         );
 
       span.textContent =
-        getAgreementText(
+        agreementContent(
           item
         );
 
 
-      if (
-        item.is_required
-      ) {
-
-        const required =
-          document.createElement(
-            "span"
-          );
-
-        required.className =
-          "required";
-
-        required.textContent =
-          " *";
-
-        span.appendChild(
-          required
-        );
-      }
-
-
-      label.appendChild(
+      wrapper.appendChild(
         input
       );
 
-      label.appendChild(
+      wrapper.appendChild(
         span
       );
 
-      field.appendChild(
-        label
+      container.appendChild(
+        wrapper
       );
 
-      container.appendChild(
-        field
-      );
     }
+
   }
 
 
   // =========================================================
-  // NUMERIC INPUT
+  // LANGUAGE
   // =========================================================
 
-  function setupNumericInput(
-    id
+  function setLabelText(
+    id,
+    value
   ) {
 
-    const input =
+    const element =
       document.getElementById(
         id
       );
 
-    input.addEventListener(
-      "input",
-      () => {
 
-        input.value =
-          input.value.replace(
-            /[^\d]/g,
-            ""
-          );
+    const firstNode =
+      element.firstChild;
 
-      }
-    );
+
+    if (
+      firstNode &&
+      firstNode.nodeType ===
+      Node.TEXT_NODE
+    ) {
+
+      firstNode.textContent =
+        value + " ";
+
+    } else {
+
+      element.insertBefore(
+        document.createTextNode(
+          value + " "
+        ),
+        element.firstChild
+      );
+
+    }
+
   }
 
 
-  setupNumericInput(
-    "troopSize"
+  function renderLanguage() {
+
+    const t =
+      text();
+
+
+    document.documentElement.lang =
+      language;
+
+
+    document.title =
+      "S1182 " +
+      t.title;
+
+
+    document.getElementById(
+      "pageTitle"
+    ).textContent =
+      t.title;
+
+
+    document.getElementById(
+      "pageIntro"
+    ).textContent =
+      t.intro;
+
+
+    document.getElementById(
+      "s1182ConfirmedText"
+    ).textContent =
+      t.s1182;
+
+
+    setLabelText(
+      "playerNameLabel",
+      t.name
+    );
+
+    setLabelText(
+      "tierLabel",
+      t.tier
+    );
+
+    setLabelText(
+      "allianceLabel",
+      t.alliance
+    );
+
+    setLabelText(
+      "troopTypeLabel",
+      t.troopType
+    );
+
+    setLabelText(
+      "troopSizeLabel",
+      t.troopSize
+    );
+
+    setLabelText(
+      "rallySizeLabel",
+      t.rallySize
+    );
+
+    setLabelText(
+      "realtimeLabel",
+      t.realtime
+    );
+
+    setLabelText(
+      "captainRoleLabel",
+      t.captainRole
+    );
+
+    setLabelText(
+      "participationTimeLabel",
+      t.participation
+    );
+
+
+    document.getElementById(
+      "agreementTitle"
+    ).textContent =
+      t.agreementTitle;
+
+
+    document.getElementById(
+      "playerName"
+    ).placeholder =
+      t.namePlaceholder;
+
+
+    document.getElementById(
+      "troopSize"
+    ).placeholder =
+      t.numberPlaceholder;
+
+
+    document.getElementById(
+      "rallySize"
+    ).placeholder =
+      t.numberPlaceholder;
+
+
+    submitButton.textContent =
+      t.submit;
+
+
+    const selectedTroop =
+      getCheckedValue(
+        "troop_type"
+      );
+
+    const selectedRealtime =
+      getCheckedValue(
+        "realtime_response"
+      );
+
+    const selectedCaptain =
+      getCheckedValue(
+        "captain_role"
+      );
+
+    const selectedParticipation =
+      getCheckedValue(
+        "participation_time"
+      );
+
+
+    renderRadioGroups();
+
+
+    const restoreRadio =
+      (name, value) => {
+
+        if (!value) {
+          return;
+        }
+
+        const input =
+          document.querySelector(
+            `input[name="${name}"][value="${value}"]`
+          );
+
+        if (input) {
+          input.checked =
+            true;
+        }
+
+      };
+
+
+    restoreRadio(
+      "troop_type",
+      selectedTroop
+    );
+
+    restoreRadio(
+      "realtime_response",
+      selectedRealtime
+    );
+
+    restoreRadio(
+      "captain_role",
+      selectedCaptain
+    );
+
+    restoreRadio(
+      "participation_time",
+      selectedParticipation
+    );
+
+
+    renderTierOptions();
+
+    renderAllianceOptions();
+
+    renderAgreements();
+
+    updateParticipationState();
+
+    renderSurveyState();
+
+  }
+
+
+  languageSelect.value =
+    language;
+
+
+  languageSelect.addEventListener(
+    "change",
+    () => {
+
+      const next =
+        languageSelect.value;
+
+
+      if (
+        !VALID_LANGUAGES.includes(
+          next
+        )
+      ) {
+        return;
+      }
+
+
+      language =
+        next;
+
+
+      localStorage.setItem(
+        "s1182-language",
+        language
+      );
+
+
+      renderLanguage();
+
+    }
   );
 
-  setupNumericInput(
-    "rallySize"
-  );
+
+  // =========================================================
+  // SURVEY STATE
+  // =========================================================
+
+  function renderSurveyState() {
+
+    const t =
+      text();
+
+
+    if (!settings) {
+
+      surveyStatus.textContent =
+        t.loadFailed;
+
+      surveyStatus.className =
+        "survey-status closed";
+
+      wkForm.classList.add(
+        "hidden"
+      );
+
+      closedBox.classList.add(
+        "hidden"
+      );
+
+      return;
+    }
+
+
+    if (
+      settings.is_open
+    ) {
+
+      surveyStatus.textContent =
+        t.applicationsOpen;
+
+      surveyStatus.className =
+        "survey-status open";
+
+
+      closedBox.classList.add(
+        "hidden"
+      );
+
+
+      wkForm.classList.remove(
+        "hidden"
+      );
+
+    } else {
+
+      surveyStatus.textContent =
+        t.applicationsClosed;
+
+      surveyStatus.className =
+        "survey-status closed";
+
+
+      closedBox.textContent =
+        t.applicationsClosed;
+
+
+      closedBox.classList.remove(
+        "hidden"
+      );
+
+
+      wkForm.classList.add(
+        "hidden"
+      );
+
+    }
+
+  }
+
+
+  // =========================================================
+  // LOAD DATA
+  // =========================================================
+
+  async function loadData() {
+
+    try {
+
+      const [
+        settingsResult,
+        tierResult,
+        allianceResult,
+        agreementResult
+      ] =
+        await Promise.all([
+
+          restGet(
+            "survey_settings" +
+            "?select=*" +
+            "&order=id.asc" +
+            "&limit=1"
+          ),
+
+          restGet(
+            "tiers" +
+            "?select=id,name,sort_order,is_active" +
+            "&is_active=eq.true" +
+            "&order=sort_order.asc,id.asc"
+          ),
+
+          restGet(
+            "alliances" +
+            "?select=id,name,sort_order,is_active" +
+            "&is_active=eq.true" +
+            "&order=sort_order.asc,id.asc"
+          ),
+
+          restGet(
+            "agreement_items" +
+            "?select=id,content_ko,content_en,content_ja,content_ru,is_required,sort_order,is_active" +
+            "&is_active=eq.true" +
+            "&order=sort_order.asc,id.asc"
+          )
+
+        ]);
+
+
+      settings =
+        settingsResult?.[0] ||
+        null;
+
+
+      tiers =
+        Array.isArray(
+          tierResult
+        )
+          ? tierResult
+          : [];
+
+
+      alliances =
+        Array.isArray(
+          allianceResult
+        )
+          ? allianceResult
+          : [];
+
+
+      agreements =
+        Array.isArray(
+          agreementResult
+        )
+          ? agreementResult
+          : [];
+
+
+      renderLanguage();
+
+
+    } catch (error) {
+
+      console.error(
+        error
+      );
+
+
+      settings =
+        null;
+
+
+      surveyStatus.textContent =
+        text().loadFailed;
+
+
+      surveyStatus.className =
+        "survey-status closed";
+
+
+      wkForm.classList.add(
+        "hidden"
+      );
+
+
+      setFormStatus(
+        text().loadFailed,
+        "error"
+      );
+
+    }
+
+  }
+
+
+  // =========================================================
+  // CLIENT VALIDATION
+  // =========================================================
+
+  const ALLOWED_TROOP_TYPES =
+    new Set([
+      "fighter",
+      "shooter",
+      "rider",
+      "all_strong"
+    ]);
+
+
+  const ALLOWED_REALTIME =
+    new Set([
+      "monitor_available",
+      "monitor_unavailable"
+    ]);
+
+
+  const ALLOWED_CAPTAIN_ROLES =
+    new Set([
+      "captain",
+      "sub_captain",
+      "regular",
+      "negotiable"
+    ]);
+
+
+  const ALLOWED_PARTICIPATION =
+    new Set([
+      "first_half",
+      "second_half",
+      "full"
+    ]);
+
+
+  function validateForm() {
+
+    const t =
+      text();
+
+
+    if (
+      !settings?.is_open
+    ) {
+
+      return {
+        ok: false,
+        message:
+          t.applicationsClosed
+      };
+
+    }
+
+
+    if (
+      !document.getElementById(
+        "s1182Confirmed"
+      ).checked
+    ) {
+
+      return {
+        ok: false,
+        message:
+          t.required
+      };
+
+    }
+
+
+    const playerName =
+      document.getElementById(
+        "playerName"
+      ).value.trim();
+
+
+    if (
+      !playerName ||
+      playerName.length > 100
+    ) {
+
+      return {
+        ok: false,
+        message:
+          t.required
+      };
+
+    }
+
+
+    const tierId =
+      Number(
+        document.getElementById(
+          "tier"
+        ).value
+      );
+
+
+    const allianceId =
+      Number(
+        document.getElementById(
+          "alliance"
+        ).value
+      );
+
+
+    if (
+      !Number.isSafeInteger(
+        tierId
+      ) ||
+      !tiers.some(
+        item =>
+          Number(item.id) ===
+          tierId
+      )
+    ) {
+
+      return {
+        ok: false,
+        message:
+          t.required
+      };
+
+    }
+
+
+    if (
+      !Number.isSafeInteger(
+        allianceId
+      ) ||
+      !alliances.some(
+        item =>
+          Number(item.id) ===
+          allianceId
+      )
+    ) {
+
+      return {
+        ok: false,
+        message:
+          t.required
+      };
+
+    }
+
+
+    const troopType =
+      getCheckedValue(
+        "troop_type"
+      );
+
+
+    const realtime =
+      getCheckedValue(
+        "realtime_response"
+      );
+
+
+    const captainRole =
+      getCheckedValue(
+        "captain_role"
+      );
+
+
+    const participation =
+      getCheckedValue(
+        "participation_time"
+      );
+
+
+    if (
+      !ALLOWED_TROOP_TYPES.has(
+        troopType
+      ) ||
+      !ALLOWED_REALTIME.has(
+        realtime
+      ) ||
+      !ALLOWED_CAPTAIN_ROLES.has(
+        captainRole
+      ) ||
+      !ALLOWED_PARTICIPATION.has(
+        participation
+      )
+    ) {
+
+      return {
+        ok: false,
+        message:
+          t.required
+      };
+
+    }
+
+
+    if (
+      realtime ===
+        "monitor_unavailable" &&
+      participation !==
+        "second_half"
+    ) {
+
+      return {
+        ok: false,
+        message:
+          t.required
+      };
+
+    }
+
+
+    const troopSize =
+      parseNonNegativeInteger(
+        document.getElementById(
+          "troopSize"
+        ).value
+      );
+
+
+    const rallySize =
+      parseNonNegativeInteger(
+        document.getElementById(
+          "rallySize"
+        ).value
+      );
+
+
+    if (
+      troopSize === null ||
+      rallySize === null
+    ) {
+
+      return {
+        ok: false,
+        message:
+          t.required
+      };
+
+    }
+
+
+    const agreementIds =
+      [];
+
+
+    for (
+      const item of agreements
+    ) {
+
+      const input =
+        document.querySelector(
+          `[data-agreement-id="${item.id}"]`
+        );
+
+
+      if (
+        item.is_required &&
+        !input?.checked
+      ) {
+
+        return {
+          ok: false,
+          message:
+            t.required
+        };
+
+      }
+
+
+      if (
+        input?.checked
+      ) {
+
+        agreementIds.push(
+          Number(item.id)
+        );
+
+      }
+
+    }
+
+
+    return {
+      ok: true,
+
+      payload: {
+        language,
+
+        s1182_confirmed:
+          true,
+
+        player_name:
+          playerName,
+
+        tier_id:
+          tierId,
+
+        alliance_id:
+          allianceId,
+
+        troop_type:
+          troopType,
+
+        troop_size:
+          troopSize,
+
+        rally_size:
+          rallySize,
+
+        realtime_response:
+          realtime,
+
+        captain_role:
+          captainRole,
+
+        participation_time:
+          participation,
+
+        agreement_ids:
+          agreementIds
+      }
+    };
+
+  }
 
 
   // =========================================================
@@ -1840,170 +2625,32 @@
       event.preventDefault();
 
 
-      formStatus.textContent =
-        "";
-
-      formStatus.className =
-        "status";
+      setFormStatus();
 
 
-      if (
-        !settings?.is_open
-      ) {
-
-        formStatus.textContent =
-          t().closed;
-
-        formStatus.className =
-          "status error";
-
-        return;
-      }
+      const validation =
+        validateForm();
 
 
       if (
-        !wkForm.reportValidity()
+        !validation.ok
       ) {
+
+        setFormStatus(
+          validation.message,
+          "error"
+        );
+
         return;
+
       }
 
-
-      const troopType =
-        document.querySelector(
-          'input[name="troopType"]:checked'
-        );
-
-
-      const realtime =
-        document.querySelector(
-          'input[name="realtimeResponse"]:checked'
-        );
-
-
-      const captain =
-        document.querySelector(
-          'input[name="captainRole"]:checked'
-        );
-
-
-      const participation =
-        document.querySelector(
-          'input[name="participationTime"]:checked'
-        );
-
-
-      const agreementIds =
-        [
-          ...document.querySelectorAll(
-            'input[data-agreement="true"]:checked'
-          )
-        ].map(
-          input =>
-            Number(
-              input.value
-            )
-        );
-
-
-      // =====================================================
-      // PAYLOAD
-      // =====================================================
-
-      const payload = {
-
-        /*
-          새 wk-submit에서 필수.
-          서버가 이 언어에 해당하는
-          동의문구를 스냅샷으로 저장한다.
-        */
-
-        language:
-          currentLanguage,
-
-
-        player_name:
-          document
-            .getElementById(
-              "playerName"
-            )
-            .value
-            .trim(),
-
-
-        tier_id:
-          Number(
-            document
-              .getElementById(
-                "tier"
-              )
-              .value
-          ),
-
-
-        alliance_id:
-          Number(
-            document
-              .getElementById(
-                "alliance"
-              )
-              .value
-          ),
-
-
-        troop_type:
-          troopType?.value ||
-          "",
-
-
-        troop_size:
-          Number(
-            document
-              .getElementById(
-                "troopSize"
-              )
-              .value
-          ),
-
-
-        rally_size:
-          Number(
-            document
-              .getElementById(
-                "rallySize"
-              )
-              .value
-          ),
-
-
-        realtime_response:
-          realtime?.value ||
-          "",
-
-
-        captain_role:
-          captain?.value ||
-          "",
-
-
-        participation_time:
-          participation?.value ||
-          "",
-
-
-        agreements:
-          agreementIds
-      };
-
-
-      // =====================================================
-      // SUBMIT START
-      // =====================================================
 
       submitButton.disabled =
         true;
 
       submitButton.textContent =
-        t().submitting;
+        text().submitting;
 
 
       try {
@@ -2016,87 +2663,44 @@
                 "POST",
 
               headers: {
-
                 "Content-Type":
                   "application/json",
 
                 apikey:
+                  SUPABASE_KEY,
+
+                Authorization:
+                  "Bearer " +
                   SUPABASE_KEY
               },
 
               body:
                 JSON.stringify(
-                  payload
+                  validation.payload
                 )
             }
           );
 
 
-        const result =
-          await response
-            .json()
-            .catch(
-              () => ({})
-            );
+        await parseJsonResponse(
+          response
+        );
 
 
-        // ===================================================
-        // ERROR
-        // ===================================================
+        setFormStatus(
+          text().success,
+          "success"
+        );
 
-        if (
-          !response.ok
-        ) {
-
-          if (
-            result.error ===
-            "SURVEY_CLOSED"
-          ) {
-
-            settings.is_open =
-              false;
-
-            renderSurveyState();
-
-            wkForm.classList.add(
-              "hidden"
-            );
-
-            throw new Error(
-              "SURVEY_CLOSED"
-            );
-          }
-
-
-          throw new Error(
-            result.error ||
-            "SUBMIT_FAILED"
-          );
-        }
-
-
-        // ===================================================
-        // SUCCESS
-        // ===================================================
 
         wkForm.reset();
 
 
-        formStatus.textContent =
-          t().success;
+        renderRadioGroups();
 
-        formStatus.className =
-          "status success";
+        renderAgreements();
 
-
-        window.scrollTo({
-          top:
-            document.body
-              .scrollHeight,
-
-          behavior:
-            "smooth"
-        });
+        updateParticipationState();
 
 
       } catch (error) {
@@ -2106,17 +2710,25 @@
         );
 
 
+        let message =
+          text().submitFailed;
+
+
         if (
-          error.message !==
+          error.message ===
           "SURVEY_CLOSED"
         ) {
 
-          formStatus.textContent =
-            t().submitFailed;
+          message =
+            text().applicationsClosed;
 
-          formStatus.className =
-            "status error";
         }
+
+
+        setFormStatus(
+          message,
+          "error"
+        );
 
 
       } finally {
@@ -2125,7 +2737,7 @@
           false;
 
         submitButton.textContent =
-          t().submit;
+          text().submit;
 
       }
 
@@ -2139,7 +2751,7 @@
 
   renderLanguage();
 
-  loadForm();
+  loadData();
 
 </script>
 
