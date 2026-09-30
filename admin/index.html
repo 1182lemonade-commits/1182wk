@@ -865,6 +865,96 @@
       </div>
 
 
+      <!-- EMAIL DELIVERY -->
+      <div class="panel section">
+
+        <div class="section-head">
+          <div>
+            <h2>Excel 이메일 발송</h2>
+            <div class="muted">
+              이 서버의 WK 신청 결과를 받을 이메일을 최대 3개까지 관리합니다.
+              Auto 마감 후 10분 자동 발송과 수동 즉시 발송에 사용됩니다.
+            </div>
+          </div>
+        </div>
+
+        <div class="schedule-grid">
+          <div class="field">
+            <label for="newEmailRecipient">새 수신 이메일</label>
+            <input
+              id="newEmailRecipient"
+              type="email"
+              maxlength="320"
+              placeholder="name@example.com"
+              autocomplete="off"
+            >
+          </div>
+
+          <div class="field">
+            <label for="newEmailRecipientOrder">순서</label>
+            <input
+              id="newEmailRecipientOrder"
+              type="number"
+              value="0"
+            >
+          </div>
+
+          <button
+            id="addEmailRecipientButton"
+            class="btn btn-primary"
+            type="button"
+          >
+            이메일 추가
+          </button>
+        </div>
+
+        <div
+          id="emailRecipientsStatus"
+          class="status"
+        ></div>
+
+        <div
+          id="emailRecipientsList"
+          class="item-list"
+          style="margin-top:16px;"
+        ></div>
+
+        <div
+          class="section-head"
+          style="margin-top:24px;"
+        >
+          <div>
+            <h3 style="margin:0;">현재 결과 즉시 전송</h3>
+            <div class="muted" style="margin-top:6px;">
+              현재 저장된 이 서버의 응답만 Excel로 만들어 활성 수신 이메일에 즉시 전송합니다.
+            </div>
+          </div>
+
+          <button
+            id="manualEmailSendButton"
+            class="btn btn-primary"
+            type="button"
+          >
+            현재 결과 이메일 전송
+          </button>
+        </div>
+
+        <div
+          id="manualEmailSendStatus"
+          class="status"
+        ></div>
+
+        <div style="margin-top:24px;">
+          <h3>최근 발송 기록</h3>
+          <div
+            id="emailDeliveryLogs"
+            class="item-list"
+          ></div>
+        </div>
+
+      </div>
+
+
       <!-- AGREEMENTS -->
       <div class="panel section">
 
@@ -1244,7 +1334,9 @@
     tiers:[],
     alliances:[],
     agreements:[],
-    applications:[]
+    applications:[],
+    emailRecipients:[],
+    emailDeliveryLogs:[]
   };
 
 
@@ -1531,7 +1623,9 @@
       tiers:[],
       alliances:[],
       agreements:[],
-      applications:[]
+      applications:[],
+      emailRecipients:[],
+      emailDeliveryLogs:[]
     };
 
     renderAll();
@@ -1844,6 +1938,8 @@
       adminData.alliances = adminData.alliances || [];
       adminData.agreements = adminData.agreements || [];
       adminData.applications = adminData.applications || [];
+      adminData.emailRecipients = adminData.emailRecipients || [];
+      adminData.emailDeliveryLogs = adminData.emailDeliveryLogs || [];
 
       renderAll();
 
@@ -1922,6 +2018,22 @@
 
         if (error.message === "NAME_REQUIRED") {
           message = "이름을 입력하세요.";
+        }
+
+        if (error.message === "INVALID_EMAIL") {
+          message = "올바른 이메일 주소를 입력하세요.";
+        }
+
+        if (error.message === "EMAIL_RECIPIENT_LIMIT") {
+          message = "활성 수신 이메일은 서버별 최대 3개입니다.";
+        }
+
+        if (error.message === "EMAIL_RECIPIENT_EXISTS") {
+          message = "이미 등록된 이메일 주소입니다.";
+        }
+
+        if (error.message === "EMAIL_RECIPIENT_NOT_FOUND") {
+          message = "이메일 수신자 정보를 찾을 수 없습니다.";
         }
 
         setStatus(statusId, message, "error");
@@ -2530,6 +2642,349 @@
           "settingsStatus"
         );
       } catch (_) {}
+    }
+  );
+
+
+  // =========================================================
+  // EMAIL RECIPIENTS / DELIVERY LOGS
+  // =========================================================
+
+  function renderEmailRecipients() {
+    const list = document.getElementById("emailRecipientsList");
+    const addButton = document.getElementById("addEmailRecipientButton");
+    const manualButton = document.getElementById("manualEmailSendButton");
+    const newEmail = document.getElementById("newEmailRecipient");
+    const newOrder = document.getElementById("newEmailRecipientOrder");
+
+    if (!selectedServerCode) {
+      list.innerHTML = '<div class="muted">먼저 관리할 서버를 선택하세요.</div>';
+      addButton.disabled = true;
+      manualButton.disabled = true;
+      newEmail.disabled = true;
+      newOrder.disabled = true;
+      renderEmailDeliveryLogs();
+      return;
+    }
+
+    addButton.disabled = false;
+    newEmail.disabled = false;
+    newOrder.disabled = false;
+
+    const recipients = Array.isArray(adminData.emailRecipients)
+      ? adminData.emailRecipients
+      : [];
+
+    const activeCount = recipients.filter(item => item?.is_active === true).length;
+    manualButton.disabled = activeCount === 0;
+
+    if (!recipients.length) {
+      list.innerHTML =
+        '<div class="muted">등록된 이메일이 없습니다.</div>';
+      renderEmailDeliveryLogs();
+      return;
+    }
+
+    list.innerHTML = "";
+
+    for (const item of recipients) {
+      const row = document.createElement("div");
+      row.className = "item-row";
+
+      const emailField = document.createElement("input");
+      emailField.type = "email";
+      emailField.maxLength = 320;
+      emailField.value = item.email || "";
+      emailField.setAttribute("aria-label", "수신 이메일");
+
+      const orderField = document.createElement("input");
+      orderField.type = "number";
+      orderField.value = Number.isFinite(Number(item.sort_order))
+        ? String(item.sort_order)
+        : "0";
+      orderField.style.maxWidth = "90px";
+      orderField.setAttribute("aria-label", "순서");
+
+      const activeLabel = document.createElement("label");
+      activeLabel.className = "checkbox-label";
+
+      const activeField = document.createElement("input");
+      activeField.type = "checkbox";
+      activeField.checked = item.is_active === true;
+
+      activeLabel.appendChild(activeField);
+      activeLabel.appendChild(document.createTextNode(" 활성"));
+
+      const saveButton = document.createElement("button");
+      saveButton.type = "button";
+      saveButton.className = "btn";
+      saveButton.textContent = "저장";
+
+      const deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.className = "btn";
+      deleteButton.textContent = "삭제";
+
+      saveButton.addEventListener("click", async () => {
+        const email = emailField.value.trim();
+
+        if (!email) {
+          setStatus(
+            "emailRecipientsStatus",
+            "이메일 주소를 입력하세요.",
+            "error"
+          );
+          return;
+        }
+
+        saveButton.disabled = true;
+
+        try {
+          await action(
+            {
+              action: "update_email_recipient",
+              id: item.id,
+              email,
+              sort_order: Number(orderField.value || 0),
+              is_active: activeField.checked
+            },
+            "emailRecipientsStatus"
+          );
+        } finally {
+          saveButton.disabled = false;
+        }
+      });
+
+      deleteButton.addEventListener("click", async () => {
+        if (!confirm("이 이메일 수신자를 삭제할까요?")) {
+          return;
+        }
+
+        deleteButton.disabled = true;
+
+        try {
+          await action(
+            {
+              action: "delete_email_recipient",
+              id: item.id
+            },
+            "emailRecipientsStatus"
+          );
+        } finally {
+          deleteButton.disabled = false;
+        }
+      });
+
+      row.appendChild(emailField);
+      row.appendChild(orderField);
+      row.appendChild(activeLabel);
+      row.appendChild(saveButton);
+      row.appendChild(deleteButton);
+
+      list.appendChild(row);
+    }
+
+    renderEmailDeliveryLogs();
+  }
+
+
+  function renderEmailDeliveryLogs() {
+    const container = document.getElementById("emailDeliveryLogs");
+    if (!container) return;
+
+    const logs = Array.isArray(adminData.emailDeliveryLogs)
+      ? adminData.emailDeliveryLogs
+      : [];
+
+    if (!selectedServerCode) {
+      container.innerHTML =
+        '<div class="muted">서버를 선택하면 발송 기록이 표시됩니다.</div>';
+      return;
+    }
+
+    if (!logs.length) {
+      container.innerHTML =
+        '<div class="muted">아직 발송 기록이 없습니다.</div>';
+      return;
+    }
+
+    container.innerHTML = "";
+
+    for (const item of logs) {
+      const row = document.createElement("div");
+      row.className = "item-row";
+
+      const typeText =
+        item.delivery_type === "auto"
+          ? "자동"
+          : "수동";
+
+      const statusText =
+        item.status === "sent"
+          ? "성공"
+          : item.status === "failed"
+            ? "실패"
+            : item.status === "sending"
+              ? "발송 중"
+              : item.status === "skipped"
+                ? "건너뜀"
+                : "대기";
+
+      const sentAt =
+        item.sent_at
+          ? new Date(item.sent_at).toLocaleString("ko-KR")
+          : item.created_at
+            ? new Date(item.created_at).toLocaleString("ko-KR")
+            : "-";
+
+      const text = document.createElement("div");
+      text.style.flex = "1";
+      text.textContent =
+        `${typeText} · ${statusText} · 수신 ${item.recipient_count ?? 0}명 · ${sentAt}`;
+
+      row.appendChild(text);
+
+      if (item.error_message) {
+        const error = document.createElement("div");
+        error.className = "muted";
+        error.textContent = String(item.error_message);
+        row.appendChild(error);
+      }
+
+      container.appendChild(row);
+    }
+  }
+
+
+  document.getElementById(
+    "addEmailRecipientButton"
+  ).addEventListener(
+    "click",
+    async () => {
+      if (!requireSelectedServer("emailRecipientsStatus")) {
+        return;
+      }
+
+      const email =
+        document.getElementById("newEmailRecipient").value.trim();
+
+      const sortOrder =
+        Number(document.getElementById("newEmailRecipientOrder").value || 0);
+
+      if (!email) {
+        setStatus(
+          "emailRecipientsStatus",
+          "이메일 주소를 입력하세요.",
+          "error"
+        );
+        return;
+      }
+
+      const button =
+        document.getElementById("addEmailRecipientButton");
+
+      button.disabled = true;
+
+      try {
+        await action(
+          {
+            action: "create_email_recipient",
+            email,
+            sort_order: sortOrder,
+            is_active: true
+          },
+          "emailRecipientsStatus"
+        );
+
+        document.getElementById("newEmailRecipient").value = "";
+        document.getElementById("newEmailRecipientOrder").value = "0";
+
+      } finally {
+        button.disabled = false;
+      }
+    }
+  );
+
+
+  document.getElementById(
+    "manualEmailSendButton"
+  ).addEventListener(
+    "click",
+    async () => {
+      if (!requireSelectedServer("manualEmailSendStatus")) {
+        return;
+      }
+
+      if (
+        !confirm(
+          "현재 S" +
+          selectedServerCode +
+          " 서버의 WK 신청 결과를 지금 이메일로 전송할까요?"
+        )
+      ) {
+        return;
+      }
+
+      const button =
+        document.getElementById("manualEmailSendButton");
+
+      setStatus("manualEmailSendStatus");
+      button.disabled = true;
+      button.textContent = "전송 중…";
+
+      try {
+        const response = await adminFetch(
+          FUNCTION_BASE + "/wk-email-send",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              server_code: selectedServerCode,
+              delivery_type: "manual"
+            })
+          }
+        );
+
+        const result = await parseResponse(response);
+
+        await loadAdminData();
+
+        setStatus(
+          "manualEmailSendStatus",
+          "이메일 전송이 완료되었습니다." +
+            (
+              Number.isFinite(Number(result.recipientCount))
+                ? " (" + Number(result.recipientCount) + "명)"
+                : ""
+            ),
+          "success"
+        );
+
+      } catch (error) {
+        console.error(error);
+
+        let message = "이메일 전송에 실패했습니다.";
+
+        if (error.message === "NO_EMAIL_RECIPIENTS") {
+          message = "활성 수신 이메일이 없습니다.";
+        } else if (error.message === "NO_APPLICATIONS") {
+          message = "전송할 신청 결과가 없습니다.";
+        } else if (error.message === "UNAUTHORIZED") {
+          message = "관리자 세션이 만료되었습니다.";
+        }
+
+        setStatus(
+          "manualEmailSendStatus",
+          message,
+          "error"
+        );
+
+      } finally {
+        button.disabled = false;
+        button.textContent = "현재 결과 이메일 전송";
+      }
     }
   );
 
@@ -3723,6 +4178,7 @@
     renderServerSelector();
     renderServerManagement();
     renderSettings();
+    renderEmailRecipients();
     renderAgreements();
     renderTiers();
     renderAlliances();
