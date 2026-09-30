@@ -1,0 +1,1798 @@
+<!doctype html>
+<html lang="ko" data-theme="system">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>S1182 WK Admin</title>
+
+  <style>
+    :root {
+      --bg:#f5f7fb;
+      --panel:#fff;
+      --text:#171a21;
+      --muted:#697386;
+      --border:#dfe3eb;
+      --input:#fff;
+      --accent:#315efb;
+      --accent-text:#fff;
+      --danger:#d92d20;
+      --success:#16803c;
+      --shadow:0 10px 28px rgba(0,0,0,.07);
+    }
+
+    @media (prefers-color-scheme:dark) {
+      html[data-theme="system"] {
+        --bg:#111318;
+        --panel:#191c23;
+        --text:#f2f4f7;
+        --muted:#a6adbb;
+        --border:#343944;
+        --input:#22262f;
+        --accent:#6f8cff;
+        --accent-text:#fff;
+        --danger:#ff746b;
+        --success:#62d98b;
+        --shadow:0 12px 30px rgba(0,0,0,.25);
+      }
+    }
+
+    html[data-theme="dark"] {
+      --bg:#111318;
+      --panel:#191c23;
+      --text:#f2f4f7;
+      --muted:#a6adbb;
+      --border:#343944;
+      --input:#22262f;
+      --accent:#6f8cff;
+      --accent-text:#fff;
+      --danger:#ff746b;
+      --success:#62d98b;
+      --shadow:0 12px 30px rgba(0,0,0,.25);
+    }
+
+    * { box-sizing:border-box; }
+
+    body {
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Roboto, "Noto Sans KR", Arial, sans-serif;
+      line-height:1.5;
+    }
+
+    button,input,select {
+      font:inherit;
+    }
+
+    button {
+      cursor:pointer;
+    }
+
+    button:disabled {
+      opacity:.55;
+      cursor:not-allowed;
+    }
+
+    .hidden {
+      display:none !important;
+    }
+
+    .page {
+      width:min(1180px,calc(100% - 24px));
+      margin:0 auto;
+      padding:24px 0 60px;
+    }
+
+    .panel {
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:22px;
+      box-shadow:var(--shadow);
+    }
+
+    .login-wrap {
+      width:min(440px,calc(100% - 24px));
+      margin:10vh auto;
+    }
+
+    h1,h2,h3 {
+      margin-top:0;
+    }
+
+    .muted {
+      color:var(--muted);
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="number"],
+    select {
+      width:100%;
+      min-height:42px;
+      padding:9px 11px;
+      border:1px solid var(--border);
+      border-radius:9px;
+      background:var(--input);
+      color:var(--text);
+      outline:none;
+    }
+
+    input:focus,
+    select:focus {
+      border-color:var(--accent);
+    }
+
+    .btn {
+      min-height:40px;
+      padding:8px 14px;
+      border:1px solid var(--border);
+      border-radius:9px;
+      background:var(--panel);
+      color:var(--text);
+      font-weight:700;
+    }
+
+    .btn-primary {
+      background:var(--accent);
+      border-color:var(--accent);
+      color:var(--accent-text);
+    }
+
+    .btn-danger {
+      color:var(--danger);
+    }
+
+    .btn-small {
+      min-height:34px;
+      padding:5px 9px;
+      font-size:13px;
+    }
+
+    .login-button {
+      width:100%;
+      margin-top:12px;
+    }
+
+    .status {
+      min-height:22px;
+      margin-top:12px;
+      font-weight:700;
+    }
+
+    .status.error { color:var(--danger); }
+    .status.success { color:var(--success); }
+
+    .header {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      margin-bottom:18px;
+    }
+
+    .header-actions {
+      display:flex;
+      gap:8px;
+    }
+
+    .tabs {
+      display:flex;
+      gap:7px;
+      flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+
+    .tab {
+      border:1px solid var(--border);
+      background:var(--panel);
+      color:var(--text);
+      border-radius:9px;
+      padding:9px 14px;
+      font-weight:700;
+    }
+
+    .tab.active {
+      background:var(--accent);
+      border-color:var(--accent);
+      color:var(--accent-text);
+    }
+
+    .section {
+      margin-bottom:20px;
+    }
+
+    .section:last-child {
+      margin-bottom:0;
+    }
+
+    .section-head {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:14px;
+    }
+
+    .section-head h2,
+    .section-head h3 {
+      margin:0;
+    }
+
+    .row {
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:10px;
+      align-items:end;
+    }
+
+    .form-grid {
+      display:grid;
+      grid-template-columns:minmax(160px,1fr) 110px auto;
+      gap:8px;
+      align-items:end;
+    }
+
+    .field label {
+      display:block;
+      font-size:13px;
+      font-weight:700;
+      margin-bottom:5px;
+    }
+
+    .item-list {
+      display:grid;
+      gap:8px;
+      margin-top:14px;
+    }
+
+    .item {
+      display:grid;
+      grid-template-columns:minmax(130px,1fr) 85px 90px auto;
+      gap:8px;
+      align-items:center;
+      padding:10px;
+      border:1px solid var(--border);
+      border-radius:10px;
+    }
+
+    .agreement-item {
+      grid-template-columns:minmax(180px,1fr) 85px 90px 90px auto;
+    }
+
+    .checkbox-label {
+      display:flex;
+      gap:7px;
+      align-items:center;
+      white-space:nowrap;
+    }
+
+    .switch-row {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:16px;
+      padding:16px;
+      border:1px solid var(--border);
+      border-radius:12px;
+    }
+
+    .survey-badge {
+      display:inline-block;
+      padding:5px 9px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:800;
+    }
+
+    .survey-badge.open {
+      color:var(--success);
+      border:1px solid var(--success);
+    }
+
+    .survey-badge.closed {
+      color:var(--danger);
+      border:1px solid var(--danger);
+    }
+
+    .table-wrap {
+      overflow:auto;
+      border:1px solid var(--border);
+      border-radius:12px;
+    }
+
+    table {
+      width:100%;
+      border-collapse:collapse;
+      min-width:1050px;
+    }
+
+    th,td {
+      padding:10px;
+      border-bottom:1px solid var(--border);
+      text-align:left;
+      vertical-align:top;
+      font-size:14px;
+    }
+
+    th {
+      white-space:nowrap;
+      background:color-mix(in srgb,var(--panel) 90%,var(--border));
+    }
+
+    tbody tr:last-child td {
+      border-bottom:0;
+    }
+
+    .agreement-view {
+      max-width:300px;
+      white-space:normal;
+    }
+
+    .empty {
+      padding:25px;
+      text-align:center;
+      color:var(--muted);
+    }
+
+    @media(max-width:700px) {
+      .page {
+        width:min(100% - 14px,1180px);
+        padding-top:10px;
+      }
+
+      .panel {
+        padding:15px;
+      }
+
+      .header {
+        align-items:flex-start;
+      }
+
+      .form-grid,
+      .item,
+      .agreement-item,
+      .row {
+        grid-template-columns:1fr;
+      }
+
+      .btn {
+        width:100%;
+      }
+
+      .tabs .tab {
+        width:auto;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- LOGIN -->
+  <section id="loginView" class="login-wrap">
+    <div class="panel">
+      <h1>S1182 WK Admin</h1>
+      <p class="muted">관리자 비밀번호를 입력하세요.</p>
+
+      <form id="loginForm">
+        <input
+          id="adminPassword"
+          type="password"
+          autocomplete="current-password"
+          placeholder="Admin password"
+          required
+        >
+
+        <button
+          id="loginButton"
+          class="btn btn-primary login-button"
+          type="submit"
+        >
+          로그인
+        </button>
+
+        <div id="loginStatus" class="status"></div>
+      </form>
+    </div>
+  </section>
+
+
+  <!-- ADMIN -->
+  <main id="adminView" class="page hidden">
+
+    <header class="header">
+      <div>
+        <h1 style="margin-bottom:3px;">S1182 WK Admin</h1>
+        <div class="muted">WK 관리</div>
+      </div>
+
+      <div class="header-actions">
+        <button id="refreshButton" class="btn">
+          새로고침
+        </button>
+
+        <button id="logoutButton" class="btn">
+          로그아웃
+        </button>
+      </div>
+    </header>
+
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="settings">
+        설문 설정
+      </button>
+
+      <button class="tab" data-tab="applications">
+        응답
+      </button>
+
+      <button class="tab" data-tab="tiers">
+        티어
+      </button>
+
+      <button class="tab" data-tab="alliances">
+        연맹
+      </button>
+    </nav>
+
+
+    <!-- SETTINGS -->
+    <section id="tab-settings" class="tab-panel">
+      <div class="panel section">
+        <div class="section-head">
+          <h2>접수 상태</h2>
+          <span id="surveyBadge" class="survey-badge"></span>
+        </div>
+
+        <div class="switch-row">
+          <div>
+            <strong>WK 신청 접수</strong>
+            <div id="surveyStateText" class="muted"></div>
+          </div>
+
+          <button id="toggleSurveyButton" class="btn btn-primary">
+            변경
+          </button>
+        </div>
+      </div>
+
+
+      <div class="panel section">
+        <div class="section-head">
+          <div>
+            <h2>마지막 동의 체크박스</h2>
+            <div class="muted">
+              활성화 항목은 최대 3개입니다.
+            </div>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="newAgreementContent">문구</label>
+            <input
+              id="newAgreementContent"
+              type="text"
+              maxlength="1000"
+              placeholder="동의 문구"
+            >
+          </div>
+
+          <div class="field">
+            <label for="newAgreementOrder">순서</label>
+            <input
+              id="newAgreementOrder"
+              type="number"
+              value="0"
+            >
+          </div>
+
+          <button id="addAgreementButton" class="btn btn-primary">
+            추가
+          </button>
+        </div>
+
+        <label class="checkbox-label" style="margin-top:10px;">
+          <input id="newAgreementRequired" type="checkbox" checked>
+          필수 항목
+        </label>
+
+        <div id="agreementList" class="item-list"></div>
+      </div>
+
+      <div id="settingsStatus" class="status"></div>
+    </section>
+
+
+    <!-- APPLICATIONS -->
+    <section id="tab-applications" class="tab-panel hidden">
+      <div class="panel">
+        <div class="section-head">
+          <div>
+            <h2>WK 응답</h2>
+            <div id="applicationCount" class="muted"></div>
+          </div>
+        </div>
+
+        <div id="applicationsContainer"></div>
+      </div>
+
+      <div id="applicationsStatus" class="status"></div>
+    </section>
+
+
+    <!-- TIERS -->
+    <section id="tab-tiers" class="tab-panel hidden">
+      <div class="panel">
+        <div class="section-head">
+          <h2>티어 관리</h2>
+        </div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="newTierName">이름</label>
+            <input id="newTierName" type="text" placeholder="예: 12">
+          </div>
+
+          <div class="field">
+            <label for="newTierOrder">순서</label>
+            <input id="newTierOrder" type="number" value="0">
+          </div>
+
+          <button id="addTierButton" class="btn btn-primary">
+            추가
+          </button>
+        </div>
+
+        <div id="tierList" class="item-list"></div>
+      </div>
+
+      <div id="tiersStatus" class="status"></div>
+    </section>
+
+
+    <!-- ALLIANCES -->
+    <section id="tab-alliances" class="tab-panel hidden">
+      <div class="panel">
+        <div class="section-head">
+          <h2>연맹 관리</h2>
+        </div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="newAllianceName">이름</label>
+            <input
+              id="newAllianceName"
+              type="text"
+              placeholder="예: ABC"
+            >
+          </div>
+
+          <div class="field">
+            <label for="newAllianceOrder">순서</label>
+            <input id="newAllianceOrder" type="number" value="0">
+          </div>
+
+          <button id="addAllianceButton" class="btn btn-primary">
+            추가
+          </button>
+        </div>
+
+        <div id="allianceList" class="item-list"></div>
+      </div>
+
+      <div id="alliancesStatus" class="status"></div>
+    </section>
+
+  </main>
+
+
+<script>
+  // =========================================================
+  // CONFIG
+  // =========================================================
+
+  const SUPABASE_URL =
+    "https://wnapiidbpsqkpawwpmdx.supabase.co";
+
+  const SUPABASE_KEY =
+    "sb_publishable_2pk4zF1sHwD0k2MUAYGY8w_onArOsa2";
+
+  const FUNCTION_BASE =
+    SUPABASE_URL + "/functions/v1";
+
+  const LOGIN_URL =
+    FUNCTION_BASE + "/admin-login";
+
+  const SESSION_URL =
+    FUNCTION_BASE + "/admin-session";
+
+  const LOGOUT_URL =
+    FUNCTION_BASE + "/admin-logout";
+
+  const ADMIN_URL =
+    FUNCTION_BASE + "/wk-admin";
+
+  const TOKEN_KEY =
+    "s1182-admin-session";
+
+
+  // =========================================================
+  // STATE
+  // =========================================================
+
+  let adminData = {
+    settings: null,
+    tiers: [],
+    alliances: [],
+    agreements: [],
+    applications: []
+  };
+
+
+  // =========================================================
+  // HELPERS
+  // =========================================================
+
+  function getToken() {
+    return sessionStorage.getItem(TOKEN_KEY) || "";
+  }
+
+  function setToken(token) {
+    sessionStorage.setItem(TOKEN_KEY, token);
+  }
+
+  function clearToken() {
+    sessionStorage.removeItem(TOKEN_KEY);
+  }
+
+  function setStatus(id, message = "", type = "") {
+    const element = document.getElementById(id);
+
+    element.textContent = message;
+    element.className =
+      "status" + (type ? " " + type : "");
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  async function parseResponse(response) {
+    const data =
+      await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      const error =
+        new Error(data.error || "REQUEST_FAILED");
+
+      error.status = response.status;
+      throw error;
+    }
+
+    return data;
+  }
+
+  async function adminFetch(
+    url,
+    options = {}
+  ) {
+    const token = getToken();
+
+    const headers = {
+      apikey: SUPABASE_KEY,
+      ...(options.headers || {})
+    };
+
+    if (token) {
+      headers.Authorization =
+        "Bearer " + token;
+    }
+
+    const response = await fetch(url, {
+      ...options,
+      headers
+    });
+
+    if (response.status === 401) {
+      clearToken();
+      showLogin();
+
+      throw new Error("UNAUTHORIZED");
+    }
+
+    return response;
+  }
+
+
+  // =========================================================
+  // LOGIN / SESSION
+  // =========================================================
+
+  const loginView =
+    document.getElementById("loginView");
+
+  const adminView =
+    document.getElementById("adminView");
+
+  function showLogin() {
+    adminView.classList.add("hidden");
+    loginView.classList.remove("hidden");
+  }
+
+  function showAdmin() {
+    loginView.classList.add("hidden");
+    adminView.classList.remove("hidden");
+  }
+
+
+  document.getElementById("loginForm")
+    .addEventListener("submit", async event => {
+      event.preventDefault();
+
+      const password =
+        document.getElementById(
+          "adminPassword"
+        ).value;
+
+      const button =
+        document.getElementById(
+          "loginButton"
+        );
+
+      setStatus("loginStatus");
+
+      button.disabled = true;
+      button.textContent = "로그인 중…";
+
+      try {
+        const response = await fetch(
+          LOGIN_URL,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+              apikey: SUPABASE_KEY
+            },
+            body: JSON.stringify({
+              password
+            })
+          }
+        );
+
+        const result =
+          await parseResponse(response);
+
+        if (!result.sessionToken) {
+          throw new Error(
+            "SESSION_TOKEN_MISSING"
+          );
+        }
+
+        setToken(result.sessionToken);
+
+        document.getElementById(
+          "adminPassword"
+        ).value = "";
+
+        showAdmin();
+        await loadAdminData();
+
+      } catch (error) {
+        console.error(error);
+
+        if (
+          error.message ===
+          "INVALID_PASSWORD"
+        ) {
+          setStatus(
+            "loginStatus",
+            "비밀번호가 올바르지 않습니다.",
+            "error"
+          );
+        } else {
+          setStatus(
+            "loginStatus",
+            "로그인에 실패했습니다.",
+            "error"
+          );
+        }
+
+      } finally {
+        button.disabled = false;
+        button.textContent = "로그인";
+      }
+    });
+
+
+  async function checkSession() {
+    const token = getToken();
+
+    if (!token) {
+      showLogin();
+      return;
+    }
+
+    try {
+      const response = await adminFetch(
+        SESSION_URL,
+        {
+          method: "GET"
+        }
+      );
+
+      await parseResponse(response);
+
+      showAdmin();
+      await loadAdminData();
+
+    } catch (error) {
+      console.error(error);
+      clearToken();
+      showLogin();
+    }
+  }
+
+
+  document.getElementById("logoutButton")
+    .addEventListener("click", async () => {
+      const token = getToken();
+
+      try {
+        if (token) {
+          await fetch(LOGOUT_URL, {
+            method: "POST",
+            headers: {
+              apikey: SUPABASE_KEY,
+              Authorization:
+                "Bearer " + token
+            }
+          });
+        }
+      } catch (error) {
+        console.error(error);
+      }
+
+      clearToken();
+      showLogin();
+    });
+
+
+  // =========================================================
+  // ADMIN API
+  // =========================================================
+
+  async function loadAdminData() {
+    try {
+      const response = await adminFetch(
+        ADMIN_URL,
+        {
+          method: "GET"
+        }
+      );
+
+      adminData =
+        await parseResponse(response);
+
+      renderAll();
+
+    } catch (error) {
+      console.error(error);
+
+      if (
+        error.message !==
+        "UNAUTHORIZED"
+      ) {
+        alert(
+          "관리자 데이터를 불러오지 못했습니다."
+        );
+      }
+    }
+  }
+
+
+  async function action(
+    body,
+    statusId
+  ) {
+    if (statusId) {
+      setStatus(statusId);
+    }
+
+    try {
+      const response = await adminFetch(
+        ADMIN_URL,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+
+          body:
+            JSON.stringify(body)
+        }
+      );
+
+      const result =
+        await parseResponse(response);
+
+      await loadAdminData();
+
+      if (statusId) {
+        setStatus(
+          statusId,
+          "저장되었습니다.",
+          "success"
+        );
+      }
+
+      return result;
+
+    } catch (error) {
+      console.error(error);
+
+      if (
+        error.message !==
+        "UNAUTHORIZED" &&
+        statusId
+      ) {
+        let message =
+          "처리에 실패했습니다.";
+
+        if (
+          error.message ===
+          "AGREEMENT_LIMIT"
+        ) {
+          message =
+            "활성화된 체크박스는 최대 3개입니다.";
+        }
+
+        setStatus(
+          statusId,
+          message,
+          "error"
+        );
+      }
+
+      throw error;
+    }
+  }
+
+
+  // =========================================================
+  // TABS
+  // =========================================================
+
+  document.querySelectorAll(".tab")
+    .forEach(button => {
+      button.addEventListener(
+        "click",
+        () => {
+          document.querySelectorAll(
+            ".tab"
+          ).forEach(item => {
+            item.classList.remove(
+              "active"
+            );
+          });
+
+          document.querySelectorAll(
+            ".tab-panel"
+          ).forEach(panel => {
+            panel.classList.add(
+              "hidden"
+            );
+          });
+
+          button.classList.add(
+            "active"
+          );
+
+          document.getElementById(
+            "tab-" +
+            button.dataset.tab
+          ).classList.remove(
+            "hidden"
+          );
+        }
+      );
+    });
+
+
+  document.getElementById(
+    "refreshButton"
+  ).addEventListener(
+    "click",
+    loadAdminData
+  );
+
+
+  // =========================================================
+  // SETTINGS
+  // =========================================================
+
+  function renderSettings() {
+    const settings =
+      adminData.settings;
+
+    const badge =
+      document.getElementById(
+        "surveyBadge"
+      );
+
+    const text =
+      document.getElementById(
+        "surveyStateText"
+      );
+
+    const button =
+      document.getElementById(
+        "toggleSurveyButton"
+      );
+
+    if (!settings) {
+      badge.textContent = "설정 없음";
+      badge.className =
+        "survey-badge closed";
+
+      text.textContent =
+        "설문 설정을 찾을 수 없습니다.";
+
+      button.disabled = true;
+      return;
+    }
+
+    button.disabled = false;
+
+    if (settings.is_open) {
+      badge.textContent = "OPEN";
+      badge.className =
+        "survey-badge open";
+
+      text.textContent =
+        "현재 신청을 받고 있습니다.";
+
+      button.textContent =
+        "접수 마감";
+    } else {
+      badge.textContent = "CLOSED";
+      badge.className =
+        "survey-badge closed";
+
+      text.textContent =
+        "현재 신청이 마감되어 있습니다.";
+
+      button.textContent =
+        "접수 시작";
+    }
+  }
+
+
+  document.getElementById(
+    "toggleSurveyButton"
+  ).addEventListener(
+    "click",
+    async () => {
+      const settings =
+        adminData.settings;
+
+      if (!settings) return;
+
+      await action(
+        {
+          action:
+            "update_settings",
+
+          id:
+            settings.id,
+
+          is_open:
+            !settings.is_open
+        },
+        "settingsStatus"
+      );
+    }
+  );
+
+
+  // =========================================================
+  // AGREEMENTS
+  // =========================================================
+
+  function renderAgreements() {
+    const container =
+      document.getElementById(
+        "agreementList"
+      );
+
+    container.innerHTML = "";
+
+    if (!adminData.agreements.length) {
+      container.innerHTML =
+        '<div class="empty">등록된 동의 항목이 없습니다.</div>';
+
+      return;
+    }
+
+    for (
+      const item of
+      adminData.agreements
+    ) {
+      const row =
+        document.createElement("div");
+
+      row.className =
+        "item agreement-item";
+
+      row.innerHTML = `
+        <input
+          class="agreement-content"
+          type="text"
+          value="${escapeHtml(item.content)}"
+        >
+
+        <input
+          class="agreement-order"
+          type="number"
+          value="${Number(item.sort_order) || 0}"
+          aria-label="순서"
+        >
+
+        <label class="checkbox-label">
+          <input
+            class="agreement-required"
+            type="checkbox"
+            ${item.is_required ? "checked" : ""}
+          >
+          필수
+        </label>
+
+        <label class="checkbox-label">
+          <input
+            class="agreement-active"
+            type="checkbox"
+            ${item.is_active ? "checked" : ""}
+          >
+          활성
+        </label>
+
+        <div>
+          <button
+            class="btn btn-small save-agreement"
+          >
+            저장
+          </button>
+
+          <button
+            class="btn btn-small btn-danger delete-agreement"
+          >
+            삭제
+          </button>
+        </div>
+      `;
+
+      row.querySelector(
+        ".save-agreement"
+      ).addEventListener(
+        "click",
+        async () => {
+          await action(
+            {
+              action:
+                "update_agreement",
+
+              id:
+                item.id,
+
+              content:
+                row.querySelector(
+                  ".agreement-content"
+                ).value,
+
+              sort_order:
+                Number(
+                  row.querySelector(
+                    ".agreement-order"
+                  ).value
+                ) || 0,
+
+              is_required:
+                row.querySelector(
+                  ".agreement-required"
+                ).checked,
+
+              is_active:
+                row.querySelector(
+                  ".agreement-active"
+                ).checked
+            },
+            "settingsStatus"
+          );
+        }
+      );
+
+      row.querySelector(
+        ".delete-agreement"
+      ).addEventListener(
+        "click",
+        async () => {
+          if (
+            !confirm(
+              "이 동의 항목을 삭제할까요?"
+            )
+          ) {
+            return;
+          }
+
+          await action(
+            {
+              action:
+                "delete_agreement",
+              id:
+                item.id
+            },
+            "settingsStatus"
+          );
+        }
+      );
+
+      container.appendChild(row);
+    }
+  }
+
+
+  document.getElementById(
+    "addAgreementButton"
+  ).addEventListener(
+    "click",
+    async () => {
+      const contentInput =
+        document.getElementById(
+          "newAgreementContent"
+        );
+
+      const content =
+        contentInput.value.trim();
+
+      if (!content) {
+        setStatus(
+          "settingsStatus",
+          "동의 문구를 입력하세요.",
+          "error"
+        );
+
+        return;
+      }
+
+      try {
+        await action(
+          {
+            action:
+              "create_agreement",
+
+            content,
+
+            sort_order:
+              Number(
+                document.getElementById(
+                  "newAgreementOrder"
+                ).value
+              ) || 0,
+
+            is_required:
+              document.getElementById(
+                "newAgreementRequired"
+              ).checked
+          },
+          "settingsStatus"
+        );
+
+        contentInput.value = "";
+
+      } catch (_) {}
+    }
+  );
+
+
+  // =========================================================
+  // TIERS
+  // =========================================================
+
+  function renderTiers() {
+    const container =
+      document.getElementById(
+        "tierList"
+      );
+
+    container.innerHTML = "";
+
+    for (
+      const item of
+      adminData.tiers
+    ) {
+      const row =
+        document.createElement("div");
+
+      row.className = "item";
+
+      row.innerHTML = `
+        <input
+          class="item-name"
+          type="text"
+          value="${escapeHtml(item.name)}"
+        >
+
+        <input
+          class="item-order"
+          type="number"
+          value="${Number(item.sort_order) || 0}"
+          aria-label="순서"
+        >
+
+        <label class="checkbox-label">
+          <input
+            class="item-active"
+            type="checkbox"
+            ${item.is_active ? "checked" : ""}
+          >
+          활성
+        </label>
+
+        <div>
+          <button class="btn btn-small save-item">
+            저장
+          </button>
+
+          <button class="btn btn-small btn-danger delete-item">
+            삭제
+          </button>
+        </div>
+      `;
+
+      row.querySelector(
+        ".save-item"
+      ).addEventListener(
+        "click",
+        async () => {
+          await action(
+            {
+              action:
+                "update_tier",
+
+              id:
+                item.id,
+
+              name:
+                row.querySelector(
+                  ".item-name"
+                ).value,
+
+              sort_order:
+                Number(
+                  row.querySelector(
+                    ".item-order"
+                  ).value
+                ) || 0,
+
+              is_active:
+                row.querySelector(
+                  ".item-active"
+                ).checked
+            },
+            "tiersStatus"
+          );
+        }
+      );
+
+      row.querySelector(
+        ".delete-item"
+      ).addEventListener(
+        "click",
+        async () => {
+          if (
+            !confirm(
+              "이 티어를 삭제할까요?"
+            )
+          ) {
+            return;
+          }
+
+          await action(
+            {
+              action:
+                "delete_tier",
+              id:
+                item.id
+            },
+            "tiersStatus"
+          );
+        }
+      );
+
+      container.appendChild(row);
+    }
+  }
+
+
+  document.getElementById(
+    "addTierButton"
+  ).addEventListener(
+    "click",
+    async () => {
+      const nameInput =
+        document.getElementById(
+          "newTierName"
+        );
+
+      const name =
+        nameInput.value.trim();
+
+      if (!name) {
+        setStatus(
+          "tiersStatus",
+          "티어 이름을 입력하세요.",
+          "error"
+        );
+
+        return;
+      }
+
+      try {
+        await action(
+          {
+            action:
+              "create_tier",
+
+            name,
+
+            sort_order:
+              Number(
+                document.getElementById(
+                  "newTierOrder"
+                ).value
+              ) || 0
+          },
+          "tiersStatus"
+        );
+
+        nameInput.value = "";
+
+      } catch (_) {}
+    }
+  );
+
+
+  // =========================================================
+  // ALLIANCES
+  // =========================================================
+
+  function renderAlliances() {
+    const container =
+      document.getElementById(
+        "allianceList"
+      );
+
+    container.innerHTML = "";
+
+    for (
+      const item of
+      adminData.alliances
+    ) {
+      const row =
+        document.createElement("div");
+
+      row.className = "item";
+
+      row.innerHTML = `
+        <input
+          class="item-name"
+          type="text"
+          value="${escapeHtml(item.name)}"
+        >
+
+        <input
+          class="item-order"
+          type="number"
+          value="${Number(item.sort_order) || 0}"
+          aria-label="순서"
+        >
+
+        <label class="checkbox-label">
+          <input
+            class="item-active"
+            type="checkbox"
+            ${item.is_active ? "checked" : ""}
+          >
+          활성
+        </label>
+
+        <div>
+          <button class="btn btn-small save-item">
+            저장
+          </button>
+
+          <button class="btn btn-small btn-danger delete-item">
+            삭제
+          </button>
+        </div>
+      `;
+
+      row.querySelector(
+        ".save-item"
+      ).addEventListener(
+        "click",
+        async () => {
+          await action(
+            {
+              action:
+                "update_alliance",
+
+              id:
+                item.id,
+
+              name:
+                row.querySelector(
+                  ".item-name"
+                ).value,
+
+              sort_order:
+                Number(
+                  row.querySelector(
+                    ".item-order"
+                  ).value
+                ) || 0,
+
+              is_active:
+                row.querySelector(
+                  ".item-active"
+                ).checked
+            },
+            "alliancesStatus"
+          );
+        }
+      );
+
+      row.querySelector(
+        ".delete-item"
+      ).addEventListener(
+        "click",
+        async () => {
+          if (
+            !confirm(
+              "이 연맹을 삭제할까요?"
+            )
+          ) {
+            return;
+          }
+
+          await action(
+            {
+              action:
+                "delete_alliance",
+              id:
+                item.id
+            },
+            "alliancesStatus"
+          );
+        }
+      );
+
+      container.appendChild(row);
+    }
+  }
+
+
+  document.getElementById(
+    "addAllianceButton"
+  ).addEventListener(
+    "click",
+    async () => {
+      const nameInput =
+        document.getElementById(
+          "newAllianceName"
+        );
+
+      const name =
+        nameInput.value.trim();
+
+      if (!name) {
+        setStatus(
+          "alliancesStatus",
+          "연맹 이름을 입력하세요.",
+          "error"
+        );
+
+        return;
+      }
+
+      try {
+        await action(
+          {
+            action:
+              "create_alliance",
+
+            name,
+
+            sort_order:
+              Number(
+                document.getElementById(
+                  "newAllianceOrder"
+                ).value
+              ) || 0
+          },
+          "alliancesStatus"
+        );
+
+        nameInput.value = "";
+
+      } catch (_) {}
+    }
+  );
+
+
+  // =========================================================
+  // APPLICATIONS
+  // =========================================================
+
+  function renderApplications() {
+    const applications =
+      adminData.applications || [];
+
+    document.getElementById(
+      "applicationCount"
+    ).textContent =
+      "총 " +
+      applications.length +
+      "건";
+
+    const container =
+      document.getElementById(
+        "applicationsContainer"
+      );
+
+    if (!applications.length) {
+      container.innerHTML =
+        '<div class="empty">아직 제출된 신청서가 없습니다.</div>';
+
+      return;
+    }
+
+    const wrap =
+      document.createElement("div");
+
+    wrap.className = "table-wrap";
+
+    const table =
+      document.createElement("table");
+
+    table.innerHTML = `
+      <thead>
+        <tr>
+          <th>제출일</th>
+          <th>이름</th>
+          <th>티어</th>
+          <th>연맹</th>
+          <th>병종</th>
+          <th>부대 규모</th>
+          <th>집결 규모</th>
+          <th>실시간 대응</th>
+          <th>캡틴</th>
+          <th>참여 시간</th>
+          <th>동의</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    `;
+
+    const tbody =
+      table.querySelector("tbody");
+
+    for (const item of applications) {
+      const tr =
+        document.createElement("tr");
+
+      const agreementText =
+        Array.isArray(item.agreements)
+          ? item.agreements
+              .filter(x => x?.agreed)
+              .map(x => x.content)
+              .join(" / ")
+          : "";
+
+      const date =
+        item.created_at
+          ? new Date(
+              item.created_at
+            ).toLocaleString("ko-KR")
+          : "";
+
+      tr.innerHTML = `
+        <td>${escapeHtml(date)}</td>
+        <td>${escapeHtml(item.player_name)}</td>
+        <td>${escapeHtml(item.tiers?.name || "-")}</td>
+        <td>${escapeHtml(item.alliances?.name || "-")}</td>
+        <td>${escapeHtml(item.troop_type)}</td>
+        <td>${escapeHtml(item.troop_size)}</td>
+        <td>${escapeHtml(item.rally_size)}</td>
+        <td>${escapeHtml(item.realtime_response)}</td>
+        <td>${escapeHtml(item.captain_role)}</td>
+        <td>${escapeHtml(item.participation_time)}</td>
+        <td class="agreement-view">${escapeHtml(agreementText)}</td>
+        <td>
+          <button class="btn btn-small btn-danger delete-application">
+            삭제
+          </button>
+        </td>
+      `;
+
+      tr.querySelector(
+        ".delete-application"
+      ).addEventListener(
+        "click",
+        async () => {
+          if (
+            !confirm(
+              "이 신청서를 삭제할까요?"
+            )
+          ) {
+            return;
+          }
+
+          await action(
+            {
+              action:
+                "delete_application",
+              id:
+                item.id
+            },
+            "applicationsStatus"
+          );
+        }
+      );
+
+      tbody.appendChild(tr);
+    }
+
+    wrap.appendChild(table);
+
+    container.innerHTML = "";
+    container.appendChild(wrap);
+  }
+
+
+  // =========================================================
+  // RENDER
+  // =========================================================
+
+  function renderAll() {
+    renderSettings();
+    renderAgreements();
+    renderTiers();
+    renderAlliances();
+    renderApplications();
+  }
+
+
+  // =========================================================
+  // START
+  // =========================================================
+
+  checkSession();
+</script>
+
+</body>
+</html>
