@@ -1213,18 +1213,29 @@ function getAutomaticApplicationState(now = Date.now()) {
   const VALID_LANGUAGES =
     ["ko", "en", "ja", "ru"];
 
-  let language =
+  function detectBrowserLanguage() {
+    const candidates = [
+      ...(Array.isArray(navigator.languages) ? navigator.languages : []),
+      navigator.language
+    ].filter(Boolean);
+
+    for (const candidate of candidates) {
+      const code = String(candidate).toLowerCase().split("-")[0];
+      if (VALID_LANGUAGES.includes(code)) return code;
+    }
+
+    return "en";
+  }
+
+  const savedLanguage =
     localStorage.getItem(
       "s1182-language"
-    ) || "ko";
+    );
 
-  if (
-    !VALID_LANGUAGES.includes(
-      language
-    )
-  ) {
-    language = "ko";
-  }
+  let language =
+    VALID_LANGUAGES.includes(savedLanguage)
+      ? savedLanguage
+      : detectBrowserLanguage();
 
 
   let isSubmitting = false;
@@ -2384,24 +2395,25 @@ function getAutomaticApplicationState(now = Date.now()) {
 
 
     const playerName =
-  document.getElementById(
-    "playerName"
-  ).value;
+      document.getElementById(
+        "playerName"
+      ).value;
 
 
-if (
-  playerName.length < 1 ||
-  playerName.length > 100
-) {
+    if (
+      playerName.length < 1 ||
+      playerName.length > 100
+    ) {
 
-  return {
-    ok: false,
-    message:
-      t.required
-  };
+      return {
+        ok: false,
+        message:
+          t.required
+      };
 
-}
-    
+    }
+
+
     const tierId =
       Number(
         document.getElementById(
