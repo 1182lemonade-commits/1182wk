@@ -271,10 +271,76 @@
         flex-wrap: wrap;
       }
     }
+  
+    .server-landing {
+      min-height: 70vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 0;
+    }
+
+    .server-landing-card {
+      width: min(100%, 520px);
+    }
+
+    .server-landing-form {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+      margin-top: 18px;
+    }
+
+    .server-landing-form input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .server-landing-status {
+      min-height: 1.5em;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 560px) {
+      .server-landing-form {
+        flex-direction: column;
+      }
+    }
+
   </style>
 </head>
 
 <body>
+
+  <div id="serverLanding" class="server-landing hidden">
+    <section class="card server-landing-card">
+      <h1 id="serverLandingTitle">어느 서버에서 오셨나요?</h1>
+      <p id="serverLandingDescription" class="muted">서버 번호를 입력해주세요.</p>
+
+      <form id="serverLandingForm" class="server-landing-form">
+        <input
+          id="serverLandingInput"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          maxlength="10"
+          placeholder="1182"
+          aria-label="서버 번호"
+        />
+        <button id="serverLandingSubmit" class="btn btn-primary" type="submit">
+          확인
+        </button>
+      </form>
+
+      <div
+        id="serverLandingStatus"
+        class="server-landing-status"
+        role="status"
+        aria-live="polite"
+      ></div>
+    </section>
+  </div>
+
 
   <main class="page">
 
@@ -1212,6 +1278,80 @@
   }
 
   const serverCode = getServerCodeFromPath();
+
+  const isRootLanding =
+    window.location.pathname === "/" ||
+    window.location.pathname === "";
+
+  async function checkAndOpenServer(rawCode) {
+    const code = String(rawCode ?? "");
+
+    const status = document.getElementById("serverLandingStatus");
+    const submit = document.getElementById("serverLandingSubmit");
+
+    if (!/^[0-9]{1,10}$/.test(code)) {
+      status.textContent = "서버 번호를 숫자로 입력해주세요.";
+      return;
+    }
+
+    submit.disabled = true;
+    status.textContent = "서버를 확인하고 있습니다.";
+
+    try {
+      const response = await fetch(
+        SUPABASE_URL +
+          "/rest/v1/servers?select=code&code=eq." +
+          encodeURIComponent(code) +
+          "&limit=1",
+        {
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: "Bearer " + SUPABASE_ANON_KEY
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("SERVER_LOOKUP_FAILED");
+      }
+
+      const rows = await response.json();
+
+      // Public RLS exposes active servers only. Inactive and nonexistent
+      // servers therefore receive the same public message.
+      if (!Array.isArray(rows) || rows.length === 0) {
+        status.textContent = "아직 지원하지 않는 서버입니다.";
+        return;
+      }
+
+      window.location.assign("/" + encodeURIComponent(code));
+    } catch (error) {
+      console.error(error);
+      status.textContent =
+        "서버를 확인하지 못했습니다. 잠시 후 다시 시도해주세요.";
+    } finally {
+      submit.disabled = false;
+    }
+  }
+
+  function initializeServerLanding() {
+    if (!isRootLanding) return false;
+
+    const landing = document.getElementById("serverLanding");
+    const form = document.getElementById("serverLandingForm");
+    const input = document.getElementById("serverLandingInput");
+
+    landing.classList.remove("hidden");
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      await checkAndOpenServer(input.value);
+    });
+
+    input.focus();
+    return true;
+  }
+
   let server = null;
 
 
@@ -2777,7 +2917,9 @@
 
   renderLanguage();
 
-  loadData();
+  if (!initializeServerLanding()) {
+    loadData();
+  }
 
   setInterval(renderSurveyState, 1000);
   document.addEventListener("visibilitychange", () => {
