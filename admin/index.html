@@ -306,6 +306,18 @@
       border-radius:12px;
     }
 
+    .application-mode-options {
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .mode-button.active {
+      background:var(--accent);
+      border-color:var(--accent);
+      color:var(--accent-text);
+    }
+
     .survey-badge {
       display:inline-block;
       padding:5px 9px;
@@ -641,37 +653,53 @@
       <div class="panel section">
 
         <div class="section-head">
-
-          <h2>접수 상태</h2>
+          <div>
+            <h2>접수 방식</h2>
+            <div class="muted">
+              신청서 개폐 방식을 설정합니다.
+            </div>
+          </div>
 
           <span
             id="surveyBadge"
             class="survey-badge"
           ></span>
-
         </div>
 
-        <div class="switch-row">
-
-          <div>
-            <strong>
-              WK 신청 접수
-            </strong>
-
-            <div
-              id="surveyStateText"
-              class="muted"
-            ></div>
-          </div>
-
+        <div
+          id="applicationModeOptions"
+          class="application-mode-options"
+        >
           <button
-            id="toggleSurveyButton"
-            class="btn btn-primary"
+            type="button"
+            class="btn mode-button"
+            data-application-mode="auto"
           >
-            변경
+            Auto
           </button>
 
+          <button
+            type="button"
+            class="btn mode-button"
+            data-application-mode="open"
+          >
+            Force Open
+          </button>
+
+          <button
+            type="button"
+            class="btn mode-button"
+            data-application-mode="closed"
+          >
+            Force Closed
+          </button>
         </div>
+
+        <div
+          id="surveyStateText"
+          class="muted"
+          style="margin-top:12px;"
+        ></div>
 
       </div>
 
@@ -1752,129 +1780,156 @@
   // =========================================================
   // SETTINGS
   // =========================================================
+  // SETTINGS
+  // =========================================================
 
   function renderSettings() {
 
     const settings =
       adminData.settings;
 
-
     const badge =
       document.getElementById(
         "surveyBadge"
       );
-
 
     const text =
       document.getElementById(
         "surveyStateText"
       );
 
-
-    const button =
-      document.getElementById(
-        "toggleSurveyButton"
+    const buttons =
+      document.querySelectorAll(
+        "[data-application-mode]"
       );
 
-
     if (!settings) {
-
       badge.textContent =
         "설정 없음";
 
       badge.className =
         "survey-badge closed";
 
-
       text.textContent =
         "설문 설정을 찾을 수 없습니다.";
 
-
-      button.disabled =
-        true;
-
+      buttons.forEach(
+        button => {
+          button.disabled = true;
+          button.classList.remove(
+            "active"
+          );
+        }
+      );
 
       return;
     }
 
+    const mode =
+      ["auto", "open", "closed"]
+        .includes(settings.mode)
+        ? settings.mode
+        : "auto";
 
-    button.disabled =
-      false;
+    buttons.forEach(
+      button => {
+        button.disabled = false;
+        button.classList.toggle(
+          "active",
+          button.dataset.applicationMode ===
+            mode
+        );
+      }
+    );
 
-
-    if (
-      settings.is_open
-    ) {
-
+    if (mode === "open") {
       badge.textContent =
-        "OPEN";
+        "FORCE OPEN";
 
       badge.className =
         "survey-badge open";
 
-
       text.textContent =
-        "현재 신청을 받고 있습니다.";
+        "일정과 관계없이 강제로 접수를 엽니다.";
 
-
-      button.textContent =
-        "접수 마감";
-
-
-    } else {
-
+    } else if (mode === "closed") {
       badge.textContent =
-        "CLOSED";
+        "FORCE CLOSED";
 
       badge.className =
         "survey-badge closed";
 
+      text.textContent =
+        "일정과 관계없이 강제로 접수를 마감합니다.";
+
+    } else {
+      badge.textContent =
+        "AUTO";
+
+      badge.className =
+        "survey-badge";
 
       text.textContent =
-        "현재 신청이 마감되어 있습니다.";
-
-
-      button.textContent =
-        "접수 시작";
-
+        "자동 일정에 따라 접수를 열고 닫습니다. 실제 자동 일정 판정은 다음 단계에서 복구합니다.";
     }
 
   }
 
 
   document.getElementById(
-    "toggleSurveyButton"
+    "applicationModeOptions"
   ).addEventListener(
     "click",
-    async () => {
+    async event => {
 
-      const settings =
-        adminData.settings;
+      const button =
+        event.target.closest(
+          "[data-application-mode]"
+        );
 
-
-      if (!settings) {
+      if (!button) {
         return;
       }
 
+      const mode =
+        button.dataset.applicationMode;
+
+      if (
+        !["auto", "open", "closed"]
+          .includes(mode)
+      ) {
+        return;
+      }
+
+      const buttons =
+        document.querySelectorAll(
+          "[data-application-mode]"
+        );
+
+      buttons.forEach(
+        item => {
+          item.disabled = true;
+        }
+      );
 
       try {
-
         await action(
           {
             action:
               "update_settings",
-
-            id:
-              settings.id,
-
-            is_open:
-              !settings.is_open
+            mode
           },
-
           "settingsStatus"
         );
-
-      } catch (_) {}
+      } catch (_) {
+        // action() handles the visible error.
+      } finally {
+        buttons.forEach(
+          item => {
+            item.disabled = false;
+          }
+        );
+      }
 
     }
   );
@@ -2829,6 +2884,7 @@
       <thead>
         <tr>
           <th>제출일</th>
+          <th>S1182 확인</th>
           <th>이름</th>
           <th>티어</th>
           <th>연맹</th>
@@ -2930,6 +2986,10 @@
       tr.innerHTML = `
         <td>
           ${escapeHtml(date)}
+        </td>
+
+        <td>
+          ${item.s1182_confirmed === true ? "확인" : "미확인"}
         </td>
 
         <td>
