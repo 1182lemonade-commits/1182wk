@@ -727,6 +727,30 @@
     </section>
 
 
+    <section id="serverManagementPanel" class="panel section hidden">
+      <div class="section-head">
+        <div>
+          <h2>서버 관리</h2>
+          <div id="serverManagementDescription" class="muted"></div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button id="toggleServerActiveButton" class="btn" type="button"></button>
+        <button id="deleteServerButton" class="btn btn-danger" type="button">
+          서버 영구 삭제
+        </button>
+      </div>
+
+      <div class="notice" style="margin-top:14px;margin-bottom:0;">
+        영구 삭제는 비활성화된 서버에서만 가능합니다. 삭제하면 해당 서버의 설정, 티어,
+        연맹, 동의항목, 신청 결과가 함께 삭제되며 복구할 수 없습니다.
+      </div>
+
+      <div id="serverManagementStatus" class="status"></div>
+    </section>
+
+
     <nav class="tabs">
 
       <button
@@ -1417,8 +1441,8 @@
   }
 
 
-  function activeServers() {
-    return servers.filter(item => item && item.is_active !== false);
+  function availableServers() {
+    return servers.filter(item => item);
   }
 
 
@@ -1467,14 +1491,17 @@
   function renderServerSelector() {
     const select = document.getElementById("serverSelect");
     const note = document.getElementById("selectedServerNote");
-    const list = activeServers();
+    const list = availableServers();
 
     select.innerHTML = '<option value="">서버를 선택하세요</option>';
 
     for (const item of list) {
       const option = document.createElement("option");
       option.value = String(item.code);
-      option.textContent = "S" + item.code + (item.name ? " · " + item.name : "");
+      option.textContent =
+        "S" + item.code +
+        (item.name ? " · " + item.name : "") +
+        (item.is_active === false ? " · 비활성" : "");
       select.appendChild(option);
     }
 
@@ -1485,8 +1512,14 @@
 
     select.value = selectedServerCode;
 
-    note.textContent = selectedServerCode
-      ? "현재 S" + selectedServerCode + " 서버를 관리하고 있습니다."
+    const selectedItem =
+      list.find(item => String(item.code) === selectedServerCode);
+
+    note.textContent = selectedItem
+      ? (
+          "현재 S" + selectedServerCode + " 서버를 관리하고 있습니다." +
+          (selectedItem.is_active === false ? " (비활성)" : "")
+        )
       : "서버를 선택하면 해당 서버의 관리 데이터가 표시됩니다.";
   }
 
@@ -2076,6 +2109,160 @@
         button.disabled = false;
         button.textContent = "서버 생성";
       }
+    }
+  );
+
+
+  function selectedServerRecord() {
+    return servers.find(
+      item => item && String(item.code) === selectedServerCode
+    ) || null;
+  }
+
+
+  function renderServerManagement() {
+    const panel =
+      document.getElementById("serverManagementPanel");
+
+    const description =
+      document.getElementById("serverManagementDescription");
+
+    const toggleButton =
+      document.getElementById("toggleServerActiveButton");
+
+    const deleteButton =
+      document.getElementById("deleteServerButton");
+
+    const server = selectedServerRecord();
+
+    if (!server) {
+      panel.classList.add("hidden");
+      return;
+    }
+
+    panel.classList.remove("hidden");
+
+    if (server.is_active === false) {
+      description.textContent =
+        "S" + server.code + " 서버는 현재 비활성화되어 있습니다.";
+      toggleButton.textContent = "서버 활성화";
+      toggleButton.classList.add("btn-primary");
+      deleteButton.disabled = false;
+    } else {
+      description.textContent =
+        "S" + server.code + " 서버는 현재 활성화되어 있습니다.";
+      toggleButton.textContent = "서버 비활성화";
+      toggleButton.classList.remove("btn-primary");
+      deleteButton.disabled = true;
+    }
+  }
+
+
+  document.getElementById(
+    "toggleServerActiveButton"
+  ).addEventListener(
+    "click",
+    async () => {
+      const server = selectedServerRecord();
+      if (!server) return;
+
+      const nextActive = server.is_active === false;
+
+      if (
+        !nextActive &&
+        !confirm(
+          "S" + server.code +
+          " 서버를 비활성화할까요?\n\n데이터는 보존되지만 공개 신청 페이지에서는 사용할 수 없게 됩니다."
+        )
+      ) {
+        return;
+      }
+
+      try {
+        await globalAdminAction(
+          {
+            action:"update_server",
+            target_server_code:String(server.code),
+            is_active:nextActive
+          },
+          "serverManagementStatus"
+        );
+
+        await loadAdminData();
+
+        setStatus(
+          "serverManagementStatus",
+          nextActive
+            ? "서버를 활성화했습니다."
+            : "서버를 비활성화했습니다.",
+          "success"
+        );
+      } catch (_) {}
+    }
+  );
+
+
+  document.getElementById(
+    "deleteServerButton"
+  ).addEventListener(
+    "click",
+    async () => {
+      const server = selectedServerRecord();
+      if (!server) return;
+
+      if (server.is_active !== false) {
+        setStatus(
+          "serverManagementStatus",
+          "영구 삭제하려면 먼저 서버를 비활성화하세요.",
+          "error"
+        );
+        return;
+      }
+
+      const typed = prompt(
+        "S" + server.code +
+        " 서버와 모든 관련 데이터를 영구 삭제합니다.\n\n계속하려면 서버 코드 " +
+        server.code +
+        " 을(를) 정확히 입력하세요."
+      );
+
+      if (typed === null) return;
+
+      if (typed !== String(server.code)) {
+        setStatus(
+          "serverManagementStatus",
+          "서버 코드가 일치하지 않아 삭제하지 않았습니다.",
+          "error"
+        );
+        return;
+      }
+
+      if (
+        !confirm(
+          "마지막 확인입니다.\n\nS" + server.code +
+          " 서버의 설정, 티어, 연맹, 동의항목, 신청 결과를 모두 영구 삭제할까요?"
+        )
+      ) {
+        return;
+      }
+
+      try {
+        await globalAdminAction(
+          {
+            action:"delete_server",
+            target_server_code:String(server.code),
+            confirmation_code:typed
+          },
+          "serverManagementStatus"
+        );
+
+        selectedServerCode = "";
+        sessionStorage.removeItem("wkapplication-admin-server");
+
+        await loadAdminData();
+
+        alert("S" + server.code + " 서버를 영구 삭제했습니다.");
+      } catch (_) {}
     }
   );
 
@@ -3534,6 +3721,7 @@
 
   function renderAll() {
     renderServerSelector();
+    renderServerManagement();
     renderSettings();
     renderAgreements();
     renderTiers();
