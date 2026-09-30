@@ -604,6 +604,101 @@
     "/functions/v1/wk-submit";
 
 
+  // Schedule constants and boundaries copied from the original S967 public index.html.
+const FIRST_OPEN_KST =
+  "2026-08-15T09:00:00+09:00";
+
+const CYCLE_DAYS =
+  14;
+
+const OPEN_DAYS =
+  5;
+
+const DAY_MS =
+  24 * 60 * 60 * 1000;
+
+const cycleMs =
+  CYCLE_DAYS * DAY_MS;
+
+const openMs =
+  OPEN_DAYS * DAY_MS;
+
+
+function getAutomaticApplicationState(now = Date.now()) {
+
+  const firstOpen =
+    new Date(
+      FIRST_OPEN_KST
+    ).getTime();
+
+
+  if (now < firstOpen) {
+    return {
+      isOpen: false,
+      nextOpen: firstOpen,
+    };
+  }
+
+
+  const elapsed =
+    now - firstOpen;
+
+  const cycleIndex =
+    Math.floor(
+      elapsed / cycleMs
+    );
+
+  const cycleStart =
+    firstOpen +
+    cycleIndex * cycleMs;
+
+  const cycleEnd =
+    cycleStart + openMs;
+
+
+  if (
+    now >= cycleStart &&
+    now < cycleEnd
+  ) {
+    return {
+      isOpen: true,
+      closeAt: cycleEnd,
+    };
+  }
+
+
+  return {
+    isOpen: false,
+
+    nextOpen:
+      cycleStart +
+      cycleMs,
+  };
+}
+
+
+
+  function resolveApplicationState(now = Date.now()) {
+    if (!settings) return { isOpen: false, mode: null };
+    if (settings.mode === "open") return { isOpen: true, mode: "open" };
+    if (settings.mode === "closed") return { isOpen: false, mode: "closed" };
+    return { ...getAutomaticApplicationState(now), mode: "auto" };
+  }
+
+  const SCHEDULE_TEXT = {
+    ko: { closes: "마감까지", opens: "다음 접수 시작까지", units: ["일", "시간", "분", "초"] },
+    en: { closes: "Closes in", opens: "Next opening in", units: ["d", "h", "m", "s"] },
+    ja: { closes: "受付終了まで", opens: "次回受付開始まで", units: ["日", "時間", "分", "秒"] },
+    ru: { closes: "До закрытия приёма", opens: "До открытия приёма", units: ["д", "ч", "мин", "с"] }
+  };
+
+  function formatTimeLeft(timestamp, now = Date.now()) {
+    const seconds = Math.max(0, Math.ceil((timestamp - now) / 1000));
+    const values = [Math.floor(seconds / 86400), Math.floor(seconds / 3600) % 24,
+      Math.floor(seconds / 60) % 60, seconds % 60];
+    return values.map((value, index) => `${value}${SCHEDULE_TEXT[language].units[index]}`).join(" ");
+  }
+
   // =========================================================
   // TRANSLATIONS
   // =========================================================
@@ -698,7 +793,7 @@
       },
 
       forcedSecondHalf:
-        "Participation Time is fixed to the second half because real-time monitoring is unavailable.",
+        "Because real-time monitoring is unavailable, Captain Role is fixed to Regular Participant and Participation Time to Second Half.",
 
       submit:
         "Submit",
@@ -823,7 +918,7 @@
       },
 
       forcedSecondHalf:
-        "실시간 모니터링이 불가능하므로 참여 시간이 후반부로 고정됩니다.",
+        "실시간 모니터링이 불가능하므로 리더 역할은 일반 참여, 참여 시간은 후반부로 고정됩니다.",
 
       submit:
         "제출",
@@ -948,7 +1043,7 @@
       },
 
       forcedSecondHalf:
-        "リアルタイム対応不可のため、参加時間は後半に固定されます。",
+        "リアルタイムで監視できないため、役割は一般参加、参加時間は後半に固定されます。",
 
       submit:
         "送信",
@@ -1073,7 +1168,7 @@
       },
 
       forcedSecondHalf:
-        "Поскольку онлайн-мониторинг недоступен, время участия автоматически установлено на вторую половину.",
+        "Без мониторинга в реальном времени роль фиксируется как обычный участник, а время участия — только вторая половина.",
 
       submit:
         "Отправить",
@@ -1132,6 +1227,7 @@
   }
 
 
+  let isSubmitting = false;
   let settings = null;
   let tiers = [];
   let alliances = [];
@@ -1472,109 +1568,20 @@
   // =========================================================
 
   function updateParticipationState() {
-
-    const t =
-      text();
-
-
-    const realtime =
-      getCheckedValue(
-        "realtime_response"
-      );
-
-
-    const forced =
-      realtime ===
-      "monitor_unavailable";
-
-
-    const inputs =
-      document.querySelectorAll(
-        'input[name="participation_time"]'
-      );
-
-
-    inputs.forEach(
-      input => {
-
-        const label =
-          input.closest(
-            ".choice"
-          );
-
-
-        if (forced) {
-
-          if (
-            input.value ===
-            "second_half"
-          ) {
-
-            input.checked =
-              true;
-
-            input.disabled =
-              false;
-
-            label?.classList.remove(
-              "disabled"
-            );
-
-          } else {
-
-            input.checked =
-              false;
-
-            input.disabled =
-              true;
-
-            label?.classList.add(
-              "disabled"
-            );
-
-          }
-
-        } else {
-
-          input.disabled =
-            false;
-
-          label?.classList.remove(
-            "disabled"
-          );
-
-        }
-
-      }
-    );
-
-
-    const notice =
-      document.getElementById(
-        "participationNotice"
-      );
-
-
-    if (forced) {
-
-      notice.textContent =
-        t.forcedSecondHalf;
-
-      notice.classList.remove(
-        "hidden"
-      );
-
-    } else {
-
-      notice.textContent =
-        "";
-
-      notice.classList.add(
-        "hidden"
-      );
-
+    const forced = getCheckedValue("realtime_response") === "monitor_unavailable";
+    for (const [name, requiredValue] of [
+      ["captain_role", "regular"],
+      ["participation_time", "second_half"]
+    ]) {
+      document.querySelectorAll(`input[name="${name}"]`).forEach(input => {
+        if (forced) input.checked = input.value === requiredValue;
+        input.disabled = forced && input.value !== requiredValue;
+        input.closest(".choice")?.classList.toggle("disabled", input.disabled);
+      });
     }
-
+    const notice = document.getElementById("participationNotice");
+    notice.textContent = forced ? text().forcedSecondHalf : "";
+    notice.classList.toggle("hidden", !forced);
   }
 
 
@@ -1742,6 +1749,10 @@
 
 
   function renderAgreements() {
+    const checkedIds = new Set(
+      [...document.querySelectorAll('[data-agreement-id]:checked')]
+        .map(input => input.dataset.agreementId)
+    );
 
     const section =
       document.getElementById(
@@ -1799,6 +1810,8 @@
 
       input.dataset.agreementId =
         String(item.id);
+
+      input.checked = checkedIds.has(String(item.id));
 
       input.required =
         Boolean(
@@ -1980,7 +1993,7 @@
 
 
     submitButton.textContent =
-      t.submit;
+      isSubmitting ? t.submitting : t.submit;
 
 
     const selectedTroop =
@@ -2103,6 +2116,8 @@
   // =========================================================
 
   function renderSurveyState() {
+    const now = Date.now();
+    const state = resolveApplicationState(now);
 
     const t =
       text();
@@ -2129,7 +2144,7 @@
 
 
     if (
-      settings.is_open
+      state.isOpen
     ) {
 
       surveyStatus.textContent =
@@ -2170,6 +2185,15 @@
         "hidden"
       );
 
+    }
+
+    if (state.mode === "auto") {
+      const labels = SCHEDULE_TEXT[language];
+      const countdown = document.createElement("div");
+      countdown.className = "small";
+      countdown.textContent = (state.isOpen ? labels.closes : labels.opens) + " " +
+        formatTimeLeft(state.isOpen ? state.closeAt : state.nextOpen, now);
+      surveyStatus.appendChild(countdown);
     }
 
   }
@@ -2332,7 +2356,7 @@
 
 
     if (
-      !settings?.is_open
+      !resolveApplicationState().isOpen
     ) {
 
       return {
@@ -2486,8 +2510,8 @@
     if (
       realtime ===
         "monitor_unavailable" &&
-      participation !==
-        "second_half"
+      (captainRole !== "regular" ||
+       participation !== "second_half")
     ) {
 
       return {
@@ -2623,6 +2647,7 @@
     async event => {
 
       event.preventDefault();
+      if (isSubmitting) return;
 
 
       setFormStatus();
@@ -2646,6 +2671,7 @@
       }
 
 
+      isSubmitting = true;
       submitButton.disabled =
         true;
 
@@ -2733,6 +2759,7 @@
 
       } finally {
 
+        isSubmitting = false;
         submitButton.disabled =
           false;
 
@@ -2752,6 +2779,11 @@
   renderLanguage();
 
   loadData();
+
+  setInterval(renderSurveyState, 1000);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) renderSurveyState();
+  });
 
 </script>
 
