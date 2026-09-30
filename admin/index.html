@@ -217,10 +217,30 @@
 
     .server-bar {
       display:grid;
-      grid-template-columns:minmax(180px,320px) 1fr;
+      grid-template-columns:minmax(180px,320px) auto 1fr;
       gap:12px;
       align-items:end;
       margin-bottom:18px;
+    }
+
+    .server-create-grid {
+      display:grid;
+      grid-template-columns:minmax(120px,1fr) minmax(180px,1.4fr);
+      gap:10px;
+    }
+
+    .server-create-schedule {
+      display:grid;
+      grid-template-columns:minmax(220px,2fr) minmax(110px,1fr) minmax(110px,1fr);
+      gap:10px;
+      margin-top:12px;
+    }
+
+    .server-create-actions {
+      display:flex;
+      justify-content:flex-end;
+      gap:8px;
+      margin-top:14px;
     }
 
     .server-bar .field {
@@ -515,6 +535,8 @@
       .form-grid,
       .simple-item,
       .server-bar,
+      .server-create-grid,
+      .server-create-schedule,
       .schedule-grid {
         grid-template-columns:1fr;
       }
@@ -648,10 +670,61 @@
         </select>
       </div>
 
+      <button id="showCreateServerButton" class="btn btn-primary" type="button">
+        서버 추가
+      </button>
+
       <div id="selectedServerNote" class="selected-server-note">
         서버를 선택하면 해당 서버의 관리 데이터가 표시됩니다.
       </div>
     </div>
+
+    <section id="createServerPanel" class="panel section hidden">
+      <div class="section-head">
+        <div>
+          <h2>새 서버 추가</h2>
+          <div class="muted">
+            서버 생성 후 해당 서버가 자동으로 선택됩니다. 최초 상태는 Force Closed입니다.
+          </div>
+        </div>
+      </div>
+
+      <div class="server-create-grid">
+        <div class="field">
+          <label for="newServerCode">서버 코드</label>
+          <input id="newServerCode" type="text" inputmode="numeric" maxlength="10" placeholder="예: 967">
+        </div>
+
+        <div class="field">
+          <label for="newServerName">표시 이름</label>
+          <input id="newServerName" type="text" maxlength="100" placeholder="예: S967">
+        </div>
+      </div>
+
+      <div class="server-create-schedule">
+        <div class="field">
+          <label for="newServerFirstOpenAt">자동 일정 최초 시작 시각</label>
+          <input id="newServerFirstOpenAt" type="datetime-local">
+        </div>
+
+        <div class="field">
+          <label for="newServerCycleDays">주기(일)</label>
+          <input id="newServerCycleDays" type="number" min="1" max="365" value="14">
+        </div>
+
+        <div class="field">
+          <label for="newServerOpenDays">접수 기간(일)</label>
+          <input id="newServerOpenDays" type="number" min="1" max="365" value="5">
+        </div>
+      </div>
+
+      <div class="server-create-actions">
+        <button id="cancelCreateServerButton" class="btn" type="button">취소</button>
+        <button id="createServerButton" class="btn btn-primary" type="button">서버 생성</button>
+      </div>
+
+      <div id="serverStatus" class="status"></div>
+    </section>
 
 
     <nav class="tabs">
@@ -1824,6 +1897,187 @@
       throw error;
     }
   }
+
+
+  // =========================================================
+  // SERVER MANAGEMENT
+  // =========================================================
+
+  async function globalAdminAction(body, statusId = "") {
+    if (statusId) setStatus(statusId);
+
+    try {
+      const response = await adminFetch(
+        ADMIN_URL,
+        {
+          method:"POST",
+          headers:{
+            "Content-Type":"application/json"
+          },
+          body:JSON.stringify(body)
+        }
+      );
+
+      return await parseResponse(response);
+
+    } catch (error) {
+      console.error(error);
+
+      if (error.message !== "UNAUTHORIZED" && statusId) {
+        let message = "처리에 실패했습니다.";
+
+        if (error.message === "INVALID_SERVER_CODE") {
+          message = "서버 코드는 숫자만 1~10자리로 입력하세요.";
+        } else if (error.message === "SERVER_NAME_REQUIRED") {
+          message = "서버 표시 이름을 입력하세요.";
+        } else if (error.message === "SERVER_CODE_EXISTS") {
+          message = "이미 등록된 서버 코드입니다.";
+        } else if (
+          error.message === "INVALID_FIRST_OPEN_AT" ||
+          error.message === "INVALID_CYCLE_DAYS" ||
+          error.message === "INVALID_OPEN_DAYS" ||
+          error.message === "OPEN_DAYS_EXCEEDS_CYCLE"
+        ) {
+          message = "자동 일정 값을 확인하세요. 접수 기간은 주기보다 길 수 없습니다.";
+        }
+
+        setStatus(statusId, message, "error");
+      }
+
+      throw error;
+    }
+  }
+
+
+  const createServerPanel =
+    document.getElementById("createServerPanel");
+
+  document.getElementById(
+    "showCreateServerButton"
+  ).addEventListener(
+    "click",
+    () => {
+      setStatus("serverStatus");
+      createServerPanel.classList.remove("hidden");
+      document.getElementById("newServerCode").focus();
+    }
+  );
+
+
+  document.getElementById(
+    "cancelCreateServerButton"
+  ).addEventListener(
+    "click",
+    () => {
+      setStatus("serverStatus");
+      createServerPanel.classList.add("hidden");
+    }
+  );
+
+
+  document.getElementById(
+    "createServerButton"
+  ).addEventListener(
+    "click",
+    async () => {
+      const code =
+        document.getElementById("newServerCode").value;
+
+      const name =
+        document.getElementById("newServerName").value.trim();
+
+      const firstOpenValue =
+        document.getElementById("newServerFirstOpenAt").value;
+
+      const cycleDays =
+        Number(document.getElementById("newServerCycleDays").value);
+
+      const openDays =
+        Number(document.getElementById("newServerOpenDays").value);
+
+      if (!/^[0-9]{1,10}$/.test(code)) {
+        setStatus(
+          "serverStatus",
+          "서버 코드는 숫자만 1~10자리로 입력하세요.",
+          "error"
+        );
+        return;
+      }
+
+      if (!name) {
+        setStatus(
+          "serverStatus",
+          "서버 표시 이름을 입력하세요.",
+          "error"
+        );
+        return;
+      }
+
+      if (
+        !firstOpenValue ||
+        !Number.isInteger(cycleDays) ||
+        !Number.isInteger(openDays) ||
+        cycleDays < 1 ||
+        cycleDays > 365 ||
+        openDays < 1 ||
+        openDays > cycleDays
+      ) {
+        setStatus(
+          "serverStatus",
+          "자동 일정 값을 확인하세요. 접수 기간은 주기보다 길 수 없습니다.",
+          "error"
+        );
+        return;
+      }
+
+      const button =
+        document.getElementById("createServerButton");
+
+      button.disabled = true;
+      button.textContent = "생성 중…";
+
+      try {
+        const result = await globalAdminAction(
+          {
+            action:"create_server",
+            code,
+            name,
+            first_open_at:new Date(firstOpenValue).toISOString(),
+            cycle_days:cycleDays,
+            open_days:openDays
+          },
+          "serverStatus"
+        );
+
+        const createdCode =
+          String(result.server?.code || code);
+
+        selectedServerCode = createdCode;
+
+        sessionStorage.setItem(
+          "wkapplication-admin-server",
+          selectedServerCode
+        );
+
+        document.getElementById("newServerCode").value = "";
+        document.getElementById("newServerName").value = "";
+        document.getElementById("newServerFirstOpenAt").value = "";
+        document.getElementById("newServerCycleDays").value = "14";
+        document.getElementById("newServerOpenDays").value = "5";
+
+        createServerPanel.classList.add("hidden");
+
+        await loadAdminData();
+
+        alert("S" + createdCode + " 서버가 생성되었습니다.");
+
+      } catch (_) {
+      } finally {
+        button.disabled = false;
+        button.textContent = "서버 생성";
+      }
+    }
+  );
 
 
   // =========================================================
