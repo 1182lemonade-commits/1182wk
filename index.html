@@ -2383,26 +2383,25 @@ function getAutomaticApplicationState(now = Date.now()) {
     }
 
 
-    const playerName =
-      document.getElementById(
-        "playerName"
-      ).value.trim();
+    cconst playerName =
+  document.getElementById(
+    "playerName"
+  ).value;
 
 
-    if (
-      !playerName ||
-      playerName.length > 100
-    ) {
+if (
+  playerName.length < 1 ||
+  playerName.length > 100
+) {
 
-      return {
-        ok: false,
-        message:
-          t.required
-      };
+  return {
+    ok: false,
+    message:
+      t.required
+  };
 
-    }
-
-
+}
+    
     const tierId =
       Number(
         document.getElementById(
