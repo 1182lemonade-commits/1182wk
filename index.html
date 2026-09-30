@@ -1,10 +1,1399 @@
 <!doctype html>
-<html lang="ko">
+<html lang="ko" data-theme="system">
 <head>
   <meta charset="utf-8">
-  <title>S1182</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+
+  <title>S1182 WK Application</title>
+
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --text: #171a21;
+      --muted: #697386;
+      --border: #dfe3eb;
+      --input: #ffffff;
+      --accent: #315efb;
+      --accent-text: #ffffff;
+      --danger: #d92d20;
+      --success: #16803c;
+      --shadow: 0 12px 32px rgba(0, 0, 0, .08);
+    }
+
+    html[data-theme="dark"] {
+      --bg: #111318;
+      --panel: #191c23;
+      --text: #f2f4f7;
+      --muted: #a6adbb;
+      --border: #343944;
+      --input: #22262f;
+      --accent: #6f8cff;
+      --accent-text: #ffffff;
+      --danger: #ff746b;
+      --success: #62d98b;
+      --shadow: 0 12px 32px rgba(0, 0, 0, .25);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      html[data-theme="system"] {
+        --bg: #111318;
+        --panel: #191c23;
+        --text: #f2f4f7;
+        --muted: #a6adbb;
+        --border: #343944;
+        --input: #22262f;
+        --accent: #6f8cff;
+        --accent-text: #ffffff;
+        --danger: #ff746b;
+        --success: #62d98b;
+        --shadow: 0 12px 32px rgba(0, 0, 0, .25);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Roboto, "Noto Sans KR", "Noto Sans JP",
+        Arial, sans-serif;
+      line-height: 1.5;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .page {
+      width: min(760px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 24px 0 60px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-select {
+      min-height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--panel);
+      color: var(--text);
+      padding: 7px 10px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 28px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(25px, 5vw, 34px);
+      line-height: 1.2;
+    }
+
+    .description {
+      color: var(--muted);
+      margin: 10px 0 0;
+      white-space: pre-wrap;
+    }
+
+    .survey-state {
+      margin-top: 18px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-weight: 700;
+    }
+
+    .survey-state.open {
+      color: var(--success);
+    }
+
+    .survey-state.closed {
+      color: var(--danger);
+    }
+
+    form {
+      margin-top: 28px;
+    }
+
+    .field {
+      margin-bottom: 24px;
+    }
+
+    .label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .required {
+      color: var(--danger);
+    }
+
+    input[type="text"],
+    select {
+      display: block;
+      width: 100%;
+      min-height: 46px;
+      padding: 10px 12px;
+      color: var(--text);
+      background: var(--input);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      outline: none;
+    }
+
+    input[type="text"]:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
+    }
+
+    .choices {
+      display: grid;
+      gap: 9px;
+    }
+
+    .choice {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      cursor: pointer;
+    }
+
+    .choice input {
+      margin: 4px 0 0;
+      flex: 0 0 auto;
+    }
+
+    .agreement {
+      padding: 13px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .submit-row {
+      margin-top: 30px;
+    }
+
+    .submit-button {
+      width: 100%;
+      min-height: 50px;
+      border: 0;
+      border-radius: 12px;
+      background: var(--accent);
+      color: var(--accent-text);
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .submit-button:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    .status {
+      min-height: 24px;
+      margin-top: 14px;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .status.error {
+      color: var(--danger);
+    }
+
+    .status.success {
+      color: var(--success);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .loading {
+      text-align: center;
+      color: var(--muted);
+      padding: 28px 0 8px;
+    }
+
+    @media (max-width: 600px) {
+      .page {
+        width: min(100% - 18px, 760px);
+        padding-top: 12px;
+      }
+
+      .panel {
+        padding: 20px 16px;
+        border-radius: 14px;
+      }
+    }
+  </style>
 </head>
+
 <body>
-  <h1>S1182</h1>
+  <main class="page">
+
+    <div class="topbar">
+      <select id="languageSelect" class="toolbar-select" aria-label="Language">
+        <option value="ko">한국어</option>
+        <option value="en">English</option>
+        <option value="ja">日本語</option>
+        <option value="ru">Русский</option>
+      </select>
+
+      <select id="themeSelect" class="toolbar-select" aria-label="Theme">
+        <option value="system">System</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </select>
+    </div>
+
+    <section class="panel">
+      <h1 id="pageTitle">WK 신청</h1>
+      <p id="pageDescription" class="description"></p>
+
+      <div id="surveyState" class="survey-state">
+        Loading…
+      </div>
+
+      <div id="loadingMessage" class="loading">
+        Loading…
+      </div>
+
+      <form id="wkForm" class="hidden">
+
+        <div class="field">
+          <label class="choice">
+            <input
+              id="serverConfirmed"
+              type="checkbox"
+              required
+            >
+            <span id="serverConfirmedText">
+              S1182 소속임을 확인합니다.
+            </span>
+          </label>
+        </div>
+
+        <div class="field">
+          <label id="playerNameLabel" class="label" for="playerName">
+            이름 <span class="required">*</span>
+          </label>
+
+          <input
+            id="playerName"
+            type="text"
+            maxlength="100"
+            autocomplete="off"
+            required
+          >
+        </div>
+
+        <div class="field">
+          <label id="tierLabel" class="label" for="tier">
+            티어 <span class="required">*</span>
+          </label>
+
+          <select id="tier" required>
+            <option value="">Loading…</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label id="allianceLabel" class="label" for="alliance">
+            연맹 <span class="required">*</span>
+          </label>
+
+          <select id="alliance" required>
+            <option value="">Loading…</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <div id="troopTypeLabel" class="label">
+            병종 <span class="required">*</span>
+          </div>
+
+          <div id="troopTypeChoices" class="choices"></div>
+        </div>
+
+        <div class="field">
+          <label id="troopSizeLabel" class="label" for="troopSize">
+            부대 규모 <span class="required">*</span>
+          </label>
+
+          <input
+            id="troopSize"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            required
+          >
+        </div>
+
+        <div class="field">
+          <label id="rallySizeLabel" class="label" for="rallySize">
+            집결 규모 <span class="required">*</span>
+          </label>
+
+          <input
+            id="rallySize"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            required
+          >
+        </div>
+
+        <div class="field">
+          <div id="realtimeLabel" class="label">
+            실시간 대응 <span class="required">*</span>
+          </div>
+
+          <div id="realtimeChoices" class="choices"></div>
+        </div>
+
+        <div class="field">
+          <div id="captainRoleLabel" class="label">
+            캡틴 역할 <span class="required">*</span>
+          </div>
+
+          <div id="captainRoleChoices" class="choices"></div>
+        </div>
+
+        <div class="field">
+          <div id="participationTimeLabel" class="label">
+            참여 시간 <span class="required">*</span>
+          </div>
+
+          <div id="participationTimeChoices" class="choices"></div>
+        </div>
+
+        <div id="agreementContainer"></div>
+
+        <div class="submit-row">
+          <button
+            id="submitButton"
+            class="submit-button"
+            type="submit"
+          >
+            제출
+          </button>
+        </div>
+
+        <div id="formStatus" class="status"></div>
+      </form>
+    </section>
+
+  </main>
+
+  <script>
+    // =========================================================
+    // S1182 Supabase
+    // =========================================================
+
+    const SUPABASE_URL =
+      "https://wnapiidbpsqkpawwpmdx.supabase.co";
+
+    const SUPABASE_KEY =
+      "sb_publishable_2pk4zF1sHwD0k2MUAYGY8w_onArOsa2";
+
+    const SUBMIT_URL =
+      SUPABASE_URL + "/functions/v1/wk-submit";
+
+
+    // =========================================================
+    // State
+    // =========================================================
+
+    let currentLanguage =
+      localStorage.getItem("s1182-language") || "ko";
+
+    let settings = null;
+    let tiers = [];
+    let alliances = [];
+    let agreements = [];
+
+
+    // =========================================================
+    // Translations
+    // =========================================================
+
+    const translations = {
+      ko: {
+        title: "WK 신청",
+        loading: "불러오는 중…",
+        open: "현재 신청을 받고 있습니다.",
+        closed: "현재 신청이 마감되었습니다.",
+
+        serverConfirm: "S1182 소속임을 확인합니다.",
+
+        playerName: "이름",
+        tier: "티어",
+        alliance: "연맹",
+        select: "선택하세요",
+
+        troopType: "병종",
+        troopSize: "부대 규모",
+        rallySize: "집결 규모",
+
+        realtime: "실시간 대응",
+        captain: "캡틴 역할",
+        participation: "참여 시간",
+
+        submit: "제출",
+        submitting: "제출 중…",
+
+        success: "신청이 제출되었습니다.",
+        submitFailed: "제출에 실패했습니다. 다시 시도해 주세요.",
+        loadFailed: "설문 정보를 불러오지 못했습니다.",
+
+        troopTypes: [
+          "보병",
+          "기병",
+          "궁병"
+        ],
+
+        realtimeOptions: [
+          "가능",
+          "어려움"
+        ],
+
+        captainOptions: [
+          "가능",
+          "불가능"
+        ],
+
+        participationOptions: [
+          "전체 참여 가능",
+          "부분 참여 가능"
+        ]
+      },
+
+      en: {
+        title: "WK Application",
+        loading: "Loading…",
+        open: "Applications are currently open.",
+        closed: "Applications are currently closed.",
+
+        serverConfirm: "I confirm that I am from S1182.",
+
+        playerName: "Name",
+        tier: "Tier",
+        alliance: "Alliance",
+        select: "Select",
+
+        troopType: "Troop Type",
+        troopSize: "Troop Size",
+        rallySize: "Rally Size",
+
+        realtime: "Real-time Response",
+        captain: "Captain Role",
+        participation: "Participation Time",
+
+        submit: "Submit",
+        submitting: "Submitting…",
+
+        success: "Your application has been submitted.",
+        submitFailed: "Submission failed. Please try again.",
+        loadFailed: "Failed to load the application form.",
+
+        troopTypes: [
+          "Infantry",
+          "Cavalry",
+          "Archer"
+        ],
+
+        realtimeOptions: [
+          "Available",
+          "Difficult"
+        ],
+
+        captainOptions: [
+          "Available",
+          "Unavailable"
+        ],
+
+        participationOptions: [
+          "Full participation",
+          "Partial participation"
+        ]
+      },
+
+      ja: {
+        title: "WK 申請",
+        loading: "読み込み中…",
+        open: "現在、申請を受け付けています。",
+        closed: "現在、申請受付は終了しています。",
+
+        serverConfirm: "S1182所属であることを確認します。",
+
+        playerName: "名前",
+        tier: "ティア",
+        alliance: "同盟",
+        select: "選択してください",
+
+        troopType: "兵種",
+        troopSize: "部隊規模",
+        rallySize: "集結規模",
+
+        realtime: "リアルタイム対応",
+        captain: "キャプテン役",
+        participation: "参加時間",
+
+        submit: "送信",
+        submitting: "送信中…",
+
+        success: "申請が送信されました。",
+        submitFailed: "送信に失敗しました。もう一度お試しください。",
+        loadFailed: "申請フォームを読み込めませんでした。",
+
+        troopTypes: [
+          "歩兵",
+          "騎兵",
+          "弓兵"
+        ],
+
+        realtimeOptions: [
+          "可能",
+          "難しい"
+        ],
+
+        captainOptions: [
+          "可能",
+          "不可"
+        ],
+
+        participationOptions: [
+          "全時間参加可能",
+          "一部参加可能"
+        ]
+      },
+
+      ru: {
+        title: "Заявка WK",
+        loading: "Загрузка…",
+        open: "Приём заявок открыт.",
+        closed: "Приём заявок закрыт.",
+
+        serverConfirm: "Я подтверждаю, что я из S1182.",
+
+        playerName: "Имя",
+        tier: "Тир",
+        alliance: "Альянс",
+        select: "Выберите",
+
+        troopType: "Тип войск",
+        troopSize: "Размер войск",
+        rallySize: "Размер сбора",
+
+        realtime: "Реакция в реальном времени",
+        captain: "Роль капитана",
+        participation: "Время участия",
+
+        submit: "Отправить",
+        submitting: "Отправка…",
+
+        success: "Заявка отправлена.",
+        submitFailed: "Не удалось отправить заявку. Попробуйте ещё раз.",
+        loadFailed: "Не удалось загрузить форму.",
+
+        troopTypes: [
+          "Пехота",
+          "Кавалерия",
+          "Лучники"
+        ],
+
+        realtimeOptions: [
+          "Могу",
+          "Сложно"
+        ],
+
+        captainOptions: [
+          "Могу",
+          "Не могу"
+        ],
+
+        participationOptions: [
+          "Полное участие",
+          "Частичное участие"
+        ]
+      }
+    };
+
+
+    // =========================================================
+    // Elements
+    // =========================================================
+
+    const languageSelect =
+      document.getElementById("languageSelect");
+
+    const themeSelect =
+      document.getElementById("themeSelect");
+
+    const pageTitle =
+      document.getElementById("pageTitle");
+
+    const pageDescription =
+      document.getElementById("pageDescription");
+
+    const surveyState =
+      document.getElementById("surveyState");
+
+    const loadingMessage =
+      document.getElementById("loadingMessage");
+
+    const wkForm =
+      document.getElementById("wkForm");
+
+    const submitButton =
+      document.getElementById("submitButton");
+
+    const formStatus =
+      document.getElementById("formStatus");
+
+
+    // =========================================================
+    // Theme
+    // =========================================================
+
+    const savedTheme =
+      localStorage.getItem("s1182-theme") || "system";
+
+    themeSelect.value = savedTheme;
+
+    document.documentElement.dataset.theme =
+      savedTheme;
+
+    themeSelect.addEventListener("change", () => {
+      const value = themeSelect.value;
+
+      document.documentElement.dataset.theme = value;
+
+      localStorage.setItem(
+        "s1182-theme",
+        value
+      );
+    });
+
+
+    // =========================================================
+    // Language
+    // =========================================================
+
+    if (!translations[currentLanguage]) {
+      currentLanguage = "ko";
+    }
+
+    languageSelect.value = currentLanguage;
+
+    languageSelect.addEventListener("change", () => {
+      currentLanguage = languageSelect.value;
+
+      localStorage.setItem(
+        "s1182-language",
+        currentLanguage
+      );
+
+      renderLanguage();
+    });
+
+
+    function t() {
+      return translations[currentLanguage];
+    }
+
+
+    function renderLanguage() {
+      const lang = t();
+
+      document.documentElement.lang =
+        currentLanguage;
+
+      pageTitle.textContent =
+        settings?.title || lang.title;
+
+      pageDescription.textContent =
+        settings?.description || "";
+
+      document.getElementById(
+        "serverConfirmedText"
+      ).textContent = lang.serverConfirm;
+
+      document.getElementById(
+        "playerNameLabel"
+      ).innerHTML =
+        lang.playerName +
+        ' <span class="required">*</span>';
+
+      document.getElementById(
+        "tierLabel"
+      ).innerHTML =
+        lang.tier +
+        ' <span class="required">*</span>';
+
+      document.getElementById(
+        "allianceLabel"
+      ).innerHTML =
+        lang.alliance +
+        ' <span class="required">*</span>';
+
+      document.getElementById(
+        "troopTypeLabel"
+      ).innerHTML =
+        lang.troopType +
+        ' <span class="required">*</span>';
+
+      document.getElementById(
+        "troopSizeLabel"
+      ).innerHTML =
+        lang.troopSize +
+        ' <span class="required">*</span>';
+
+      document.getElementById(
+        "rallySizeLabel"
+      ).innerHTML =
+        lang.rallySize +
+        ' <span class="required">*</span>';
+
+      document.getElementById(
+        "realtimeLabel"
+      ).innerHTML =
+        lang.realtime +
+        ' <span class="required">*</span>';
+
+      document.getElementById(
+        "captainRoleLabel"
+      ).innerHTML =
+        lang.captain +
+        ' <span class="required">*</span>';
+
+      document.getElementById(
+        "participationTimeLabel"
+      ).innerHTML =
+        lang.participation +
+        ' <span class="required">*</span>';
+
+      submitButton.textContent =
+        lang.submit;
+
+      renderSurveyState();
+      renderSelects();
+      renderChoices();
+      renderAgreements();
+    }
+
+
+    // =========================================================
+    // Supabase REST
+    // =========================================================
+
+    async function supabaseGet(table, query = "") {
+      const response = await fetch(
+        SUPABASE_URL +
+        "/rest/v1/" +
+        table +
+        query,
+        {
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization:
+              "Bearer " + SUPABASE_KEY
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          "Supabase request failed: " +
+          response.status
+        );
+      }
+
+      return response.json();
+    }
+
+
+    // =========================================================
+    // Load form configuration
+    // =========================================================
+
+    async function loadForm() {
+      loadingMessage.textContent =
+        t().loading;
+
+      try {
+        const [
+          settingsData,
+          tierData,
+          allianceData,
+          agreementData
+        ] = await Promise.all([
+          supabaseGet(
+            "survey_settings",
+            "?select=*&order=id.asc&limit=1"
+          ),
+
+          supabaseGet(
+            "tiers",
+            "?select=id,name,sort_order&is_active=eq.true&order=sort_order.asc,id.asc"
+          ),
+
+          supabaseGet(
+            "alliances",
+            "?select=id,name,sort_order&is_active=eq.true&order=sort_order.asc,id.asc"
+          ),
+
+          supabaseGet(
+            "agreement_items",
+            "?select=id,content,is_required,sort_order&is_active=eq.true&order=sort_order.asc,id.asc"
+          )
+        ]);
+
+        settings =
+          settingsData[0] || null;
+
+        tiers =
+          tierData || [];
+
+        alliances =
+          allianceData || [];
+
+        agreements =
+          agreementData || [];
+
+        loadingMessage.classList.add("hidden");
+
+        renderLanguage();
+
+        if (settings?.is_open) {
+          wkForm.classList.remove("hidden");
+        } else {
+          wkForm.classList.add("hidden");
+        }
+
+      } catch (error) {
+        console.error(error);
+
+        loadingMessage.textContent =
+          t().loadFailed;
+
+        surveyState.textContent =
+          t().loadFailed;
+
+        surveyState.className =
+          "survey-state closed";
+      }
+    }
+
+
+    // =========================================================
+    // Survey state
+    // =========================================================
+
+    function renderSurveyState() {
+      if (!settings) {
+        surveyState.textContent =
+          t().loading;
+
+        surveyState.className =
+          "survey-state";
+
+        return;
+      }
+
+      if (settings.is_open) {
+        surveyState.textContent =
+          t().open;
+
+        surveyState.className =
+          "survey-state open";
+      } else {
+        surveyState.textContent =
+          t().closed;
+
+        surveyState.className =
+          "survey-state closed";
+      }
+    }
+
+
+    // =========================================================
+    // Tier / Alliance
+    // =========================================================
+
+    function renderSelects() {
+      const tier =
+        document.getElementById("tier");
+
+      const alliance =
+        document.getElementById("alliance");
+
+      const selectedTier = tier.value;
+      const selectedAlliance = alliance.value;
+
+      tier.innerHTML = "";
+
+      const tierPlaceholder =
+        document.createElement("option");
+
+      tierPlaceholder.value = "";
+      tierPlaceholder.textContent =
+        t().select;
+
+      tier.appendChild(tierPlaceholder);
+
+      for (const item of tiers) {
+        const option =
+          document.createElement("option");
+
+        option.value = item.id;
+        option.textContent = item.name;
+
+        tier.appendChild(option);
+      }
+
+      alliance.innerHTML = "";
+
+      const alliancePlaceholder =
+        document.createElement("option");
+
+      alliancePlaceholder.value = "";
+      alliancePlaceholder.textContent =
+        t().select;
+
+      alliance.appendChild(alliancePlaceholder);
+
+      for (const item of alliances) {
+        const option =
+          document.createElement("option");
+
+        option.value = item.id;
+        option.textContent = item.name;
+
+        alliance.appendChild(option);
+      }
+
+      if (
+        [...tier.options].some(
+          option =>
+            option.value === selectedTier
+        )
+      ) {
+        tier.value = selectedTier;
+      }
+
+      if (
+        [...alliance.options].some(
+          option =>
+            option.value === selectedAlliance
+        )
+      ) {
+        alliance.value = selectedAlliance;
+      }
+    }
+
+
+    // =========================================================
+    // Radio choices
+    // =========================================================
+
+    function createRadioGroup(
+      containerId,
+      name,
+      values,
+      labels
+    ) {
+      const container =
+        document.getElementById(containerId);
+
+      const previous =
+        document.querySelector(
+          'input[name="' +
+          name +
+          '"]:checked'
+        )?.value;
+
+      container.innerHTML = "";
+
+      values.forEach((value, index) => {
+        const label =
+          document.createElement("label");
+
+        label.className = "choice";
+
+        const input =
+          document.createElement("input");
+
+        input.type = "radio";
+        input.name = name;
+        input.value = value;
+        input.required = true;
+
+        if (previous === value) {
+          input.checked = true;
+        }
+
+        const span =
+          document.createElement("span");
+
+        span.textContent = labels[index];
+
+        label.appendChild(input);
+        label.appendChild(span);
+
+        container.appendChild(label);
+      });
+    }
+
+
+    function renderChoices() {
+      const lang = t();
+
+      /*
+        저장되는 값은 언어와 무관하게 고정.
+        화면에 보이는 문구만 번역됨.
+      */
+
+      createRadioGroup(
+        "troopTypeChoices",
+        "troopType",
+        [
+          "infantry",
+          "cavalry",
+          "archer"
+        ],
+        lang.troopTypes
+      );
+
+      createRadioGroup(
+        "realtimeChoices",
+        "realtimeResponse",
+        [
+          "available",
+          "difficult"
+        ],
+        lang.realtimeOptions
+      );
+
+      createRadioGroup(
+        "captainRoleChoices",
+        "captainRole",
+        [
+          "available",
+          "unavailable"
+        ],
+        lang.captainOptions
+      );
+
+      createRadioGroup(
+        "participationTimeChoices",
+        "participationTime",
+        [
+          "full",
+          "partial"
+        ],
+        lang.participationOptions
+      );
+    }
+
+
+    // =========================================================
+    // Dynamic agreements
+    // =========================================================
+
+    function renderAgreements() {
+      const container =
+        document.getElementById(
+          "agreementContainer"
+        );
+
+      const checked = new Set(
+        [...container.querySelectorAll(
+          'input[type="checkbox"]:checked'
+        )].map(input => input.value)
+      );
+
+      container.innerHTML = "";
+
+      for (const item of agreements) {
+        const field =
+          document.createElement("div");
+
+        field.className = "field agreement";
+
+        const label =
+          document.createElement("label");
+
+        label.className = "choice";
+
+        const input =
+          document.createElement("input");
+
+        input.type = "checkbox";
+        input.value = item.id;
+        input.dataset.agreement = "true";
+        input.required =
+          item.is_required === true;
+
+        if (checked.has(String(item.id))) {
+          input.checked = true;
+        }
+
+        const span =
+          document.createElement("span");
+
+        span.textContent =
+          item.content +
+          (item.is_required ? " *" : "");
+
+        label.appendChild(input);
+        label.appendChild(span);
+
+        field.appendChild(label);
+        container.appendChild(field);
+      }
+    }
+
+
+    // =========================================================
+    // Numeric input
+    // =========================================================
+
+    function setupNumericInput(id) {
+      const input =
+        document.getElementById(id);
+
+      input.addEventListener("input", () => {
+        input.value =
+          input.value.replace(/[^\d]/g, "");
+      });
+    }
+
+    setupNumericInput("troopSize");
+    setupNumericInput("rallySize");
+
+
+    // =========================================================
+    // Submit
+    // =========================================================
+
+    wkForm.addEventListener(
+      "submit",
+      async event => {
+        event.preventDefault();
+
+        formStatus.textContent = "";
+        formStatus.className = "status";
+
+        if (!settings?.is_open) {
+          formStatus.textContent =
+            t().closed;
+
+          formStatus.className =
+            "status error";
+
+          return;
+        }
+
+        if (!wkForm.reportValidity()) {
+          return;
+        }
+
+        const troopType =
+          document.querySelector(
+            'input[name="troopType"]:checked'
+          );
+
+        const realtime =
+          document.querySelector(
+            'input[name="realtimeResponse"]:checked'
+          );
+
+        const captain =
+          document.querySelector(
+            'input[name="captainRole"]:checked'
+          );
+
+        const participation =
+          document.querySelector(
+            'input[name="participationTime"]:checked'
+          );
+
+        const agreementIds =
+          [...document.querySelectorAll(
+            'input[data-agreement="true"]:checked'
+          )].map(input =>
+            Number(input.value)
+          );
+
+        const payload = {
+          player_name:
+            document.getElementById(
+              "playerName"
+            ).value.trim(),
+
+          tier_id:
+            Number(
+              document.getElementById(
+                "tier"
+              ).value
+            ),
+
+          alliance_id:
+            Number(
+              document.getElementById(
+                "alliance"
+              ).value
+            ),
+
+          troop_type:
+            troopType?.value || "",
+
+          troop_size:
+            Number(
+              document.getElementById(
+                "troopSize"
+              ).value
+            ),
+
+          rally_size:
+            Number(
+              document.getElementById(
+                "rallySize"
+              ).value
+            ),
+
+          realtime_response:
+            realtime?.value || "",
+
+          captain_role:
+            captain?.value || "",
+
+          participation_time:
+            participation?.value || "",
+
+          agreements:
+            agreementIds
+        };
+
+        submitButton.disabled = true;
+        submitButton.textContent =
+          t().submitting;
+
+        try {
+          const response = await fetch(
+            SUBMIT_URL,
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                apikey:
+                  SUPABASE_KEY
+              },
+
+              body:
+                JSON.stringify(payload)
+            }
+          );
+
+          const result =
+            await response.json()
+              .catch(() => ({}));
+
+          if (!response.ok) {
+            if (
+              result.error ===
+              "SURVEY_CLOSED"
+            ) {
+              settings.is_open = false;
+
+              renderSurveyState();
+
+              wkForm.classList.add(
+                "hidden"
+              );
+
+              throw new Error(
+                "SURVEY_CLOSED"
+              );
+            }
+
+            throw new Error(
+              result.error ||
+              "SUBMIT_FAILED"
+            );
+          }
+
+          wkForm.reset();
+
+          formStatus.textContent =
+            t().success;
+
+          formStatus.className =
+            "status success";
+
+          window.scrollTo({
+            top:
+              document.body.scrollHeight,
+            behavior: "smooth"
+          });
+
+        } catch (error) {
+          console.error(error);
+
+          if (
+            error.message !==
+            "SURVEY_CLOSED"
+          ) {
+            formStatus.textContent =
+              t().submitFailed;
+
+            formStatus.className =
+              "status error";
+          }
+
+        } finally {
+          submitButton.disabled = false;
+          submitButton.textContent =
+            t().submit;
+        }
+      }
+    );
+
+
+    // =========================================================
+    // Start
+    // =========================================================
+
+    renderLanguage();
+    loadForm();
+  </script>
 </body>
 </html>
