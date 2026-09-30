@@ -859,6 +859,14 @@
             ></div>
           </div>
 
+          <button
+            id="downloadExcelButton"
+            class="btn btn-primary"
+            type="button"
+          >
+            Excel 다운로드
+          </button>
+
         </div>
 
         <div
@@ -1028,6 +1036,8 @@
 
   </main>
 
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <script>
   // =========================================================
@@ -2829,6 +2839,76 @@
 
 
   // =========================================================
+  // APPLICATIONS / EXCEL
+  // =========================================================
+
+  const APPLICATION_LABELS = {
+    troop_type: { fighter: "용사", shooter: "슈터", rider: "기수", all_strong: "전 병종 강함" },
+    realtime_response: {
+      monitor_available: "실시간 모니터링 및 대응 가능",
+      monitor_unavailable: "실시간 모니터링 불가 / 후반부만 참여"
+    },
+    captain_role: {
+      captain: "리더",
+      sub_captain: "서브리더",
+      regular: "일반 참여",
+      negotiable: "필요 시 조정 가능 — 우선순위 낮음"
+    },
+    participation_time: {
+      first_half: "전반부 (19:00–23:00)",
+      second_half: "후반부 (23:00–03:00)",
+      full: "전체 (19:00–03:00)"
+    }
+  };
+
+  function applicationLabel(group, value) {
+    return APPLICATION_LABELS[group]?.[value] || value || "";
+  }
+
+  function downloadApplicationsExcel() {
+    const applications = adminData.applications || [];
+
+    if (!applications.length) {
+      setStatus("applicationsStatus", "다운로드할 응답이 없습니다.", "error");
+      return;
+    }
+
+    if (typeof XLSX === "undefined") {
+      setStatus("applicationsStatus", "Excel 라이브러리를 불러오지 못했습니다.", "error");
+      return;
+    }
+
+    const rows = applications.map(item => ({
+      "플레이어명": item.player_name ?? "",
+      "티어": item.tiers?.name ?? "",
+      "연맹": item.alliances?.name ?? "",
+      "병종": applicationLabel("troop_type", item.troop_type),
+      "부대 규모": item.troop_size ?? "",
+      "집결 규모": item.rally_size ?? "",
+      "실시간 대응": applicationLabel("realtime_response", item.realtime_response),
+      "리더 역할": applicationLabel("captain_role", item.captain_role),
+      "참여 시간": applicationLabel("participation_time", item.participation_time),
+      "신청일시": item.created_at ? new Date(item.created_at).toLocaleString("ko-KR") : ""
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    worksheet["!cols"] = [
+      { wch: 22 }, { wch: 10 }, { wch: 12 }, { wch: 16 }, { wch: 14 },
+      { wch: 14 }, { wch: 34 }, { wch: 28 }, { wch: 24 }, { wch: 22 }
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "WK 응답");
+
+    const stamp = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(workbook, `S1182-WK-${stamp}.xlsx`);
+    setStatus("applicationsStatus", "Excel 파일을 다운로드했습니다.", "success");
+  }
+
+  document.getElementById("downloadExcelButton")?.addEventListener("click", downloadApplicationsExcel);
+
+
+  // =========================================================
   // APPLICATIONS
   // =========================================================
 
@@ -2884,7 +2964,6 @@
       <thead>
         <tr>
           <th>제출일</th>
-          <th>S1182 확인</th>
           <th>이름</th>
           <th>티어</th>
           <th>연맹</th>
@@ -2894,7 +2973,6 @@
           <th>실시간 대응</th>
           <th>캡틴</th>
           <th>참여 시간</th>
-          <th>동의</th>
           <th></th>
         </tr>
       </thead>
@@ -2930,66 +3008,9 @@
           : "";
 
 
-      let agreementHtml =
-        "";
-
-
-      if (
-        Array.isArray(
-          item.agreements
-        ) &&
-        item.agreements.length
-      ) {
-
-        agreementHtml =
-          item.agreements
-            .filter(
-              agreement =>
-                agreement?.agreed
-            )
-            .map(
-              agreement => {
-
-                const language =
-                  String(
-                    agreement.language ||
-                    ""
-                  ).toUpperCase();
-
-
-                return `
-                  <div class="agreement-snapshot">
-
-                    ${
-                      language
-                        ? `<span class="agreement-language">${escapeHtml(language)}</span>`
-                        : ""
-                    }
-
-                    ${escapeHtml(agreement.content || "")}
-
-                  </div>
-                `;
-
-              }
-            )
-            .join("");
-
-      } else {
-
-        agreementHtml =
-          "-";
-
-      }
-
-
       tr.innerHTML = `
         <td>
           ${escapeHtml(date)}
-        </td>
-
-        <td>
-          ${item.s1182_confirmed === true ? "확인" : "미확인"}
         </td>
 
         <td>
@@ -3026,10 +3047,6 @@
 
         <td>
           ${escapeHtml(item.participation_time)}
-        </td>
-
-        <td class="agreement-view">
-          ${agreementHtml}
         </td>
 
         <td>
